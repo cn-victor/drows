@@ -3,8 +3,10 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import PoemCanvas from "@/components/PoemCanvas";
+import PoemPlayer from "@/components/PoemPlayer";
 import ShareBar from "@/components/ShareBar";
 import { excerpt, renderDoc } from "@/lib/poem";
+import { buildSegments } from "@/lib/segments";
 import { SITE_NAME } from "@/lib/site";
 import { getPoem } from "@/server/db";
 
@@ -40,8 +42,11 @@ async function PoemView({ params, searchParams }: { params: PageProps<"/p/[id]">
         <p className="mt-2 text-lg italic" style={{ color: "var(--poem-muted)", fontFamily: "var(--poem-font)", textAlign: style.align }}>
           by {poem.author}
         </p>
+        <div className="mt-6">
+          <PoemPlayer poemId={poem.id} segments={buildSegments(poem.doc)} music={style.music} align={style.align} />
+        </div>
         {/* The poem was cleaned when it was saved and loaded, so only safe formatting reaches the page. */}
-        <div className="poem-body mt-10" dangerouslySetInnerHTML={{ __html: renderDoc(poem.doc) }} />
+        <div data-poem className="poem-body mt-10" dangerouslySetInnerHTML={{ __html: renderDoc(poem.doc) }} />
         <div className="mt-16">
           <ShareBar id={poem.id} title={poem.title} isNew={sp.new === "1"} />
         </div>

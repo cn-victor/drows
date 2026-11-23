@@ -1,48 +1,22 @@
 "use client";
-import { EditorContent, Extension, useEditor } from "@tiptap/react";
-import StarterKit from "@tiptap/starter-kit";
-import TextAlign from "@tiptap/extension-text-align";
-import { Color, FontFamily, FontSize, TextStyle } from "@tiptap/extension-text-style";
+import { EditorContent, useEditor } from "@tiptap/react";
 import { Placeholder } from "@tiptap/extensions";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import { poemExtensions } from "./editorExtensions";
+import LineBar from "./LineBar";
 import LookPanel from "./LookPanel";
 import PoemCanvas from "./PoemCanvas";
+import PreviewReader from "./PreviewReader";
+import SoundPanel from "./SoundPanel";
 import Toolbar from "./Toolbar";
 import { editKeyFor, forgetPoem, rememberPoem } from "@/lib/mine";
-import { defaultStyle, LIMITS, type DocNode, type Poem, type PoemStyle } from "@/lib/poem";
+import { cleanDoc, cleanStyle, defaultStyle, LIMITS, type DocNode, type Poem, type PoemStyle } from "@/lib/poem";
 import { SITE_NAME } from "@/lib/site";
 
 const DRAFT = "inkwell:draft";
 const PEN = "inkwell:penname";
-
-// Tab key adds an indent (four spaces) instead of jumping out of the poem.
-const PoemTab = Extension.create({
-  name: "poemTab",
-  addKeyboardShortcuts() {
-    return { Tab: () => this.editor.commands.insertContent({ type: "text", text: "    " }) };
-  },
-});
-
-const poemExtensions = [
-  StarterKit.configure({
-    heading: { levels: [1, 2, 3] },
-    code: false,
-    codeBlock: false,
-    bulletList: false,
-    orderedList: false,
-    listItem: false,
-    listKeymap: false,
-    link: false,
-  }),
-  TextAlign.configure({ types: ["heading", "paragraph"], alignments: ["left", "center", "right", "justify"] }),
-  TextStyle,
-  Color,
-  FontFamily,
-  FontSize,
-  PoemTab,
-];
 
 type Draft = { title: string; author: string; doc: DocNode; style: PoemStyle };
 
@@ -57,6 +31,7 @@ export default function Writer({ initial }: { initial: Poem | null }) {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [showLook, setShowLook] = useState(false);
+  const [panel, setPanel] = useState<"look" | "sound">("look");
   const loaded = useRef(false);
 
   const editor = useEditor({
@@ -76,7 +51,7 @@ export default function Writer({ initial }: { initial: Poem | null }) {
           if (d) {
             e.commands.setContent(d.doc);
             setTitle(d.title);
-            setStyle(d.style);
+            setStyle(cleanStyle(d.style)); // older drafts may miss newer settings
           }
         } catch {}
         setAuthor((a) => a || localStorage.getItem(PEN) || "");
@@ -167,7 +142,7 @@ export default function Writer({ initial }: { initial: Poem | null }) {
             <button onClick={startOver} className="hidden rounded-full px-3 py-1.5 text-sm text-muted hover:bg-black/5 sm:block">Start over</button>
           )}
           <button onClick={() => setShowLook((v) => !v)} className="rounded-full px-3 py-1.5 text-sm ring-1 ring-black/15 hover:bg-black/5 lg:hidden">
-            {showLook ? "Back to poem" : "Look & theme"}
+            {showLook ? "Back to poem" : "Look & sound"}
           </button>
           <button
             onClick={publish}
@@ -190,8 +165,9 @@ export default function Writer({ initial }: { initial: Poem | null }) {
         <PoemCanvas style={style} className={`flex-1 ${showLook ? "hidden lg:block" : ""}`}>
           <div className="mx-auto flex max-w-2xl flex-col px-5 pb-24 pt-5 sm:px-8">
             {editor && (
-              <div className="sticky top-16 z-20 mb-10">
+              <div className="sticky top-16 z-20 mb-10 flex flex-col gap-1.5">
                 <Toolbar editor={editor} themeId={style.theme} />
+                <LineBar editor={editor} />
               </div>
             )}
             <input
@@ -222,7 +198,24 @@ export default function Writer({ initial }: { initial: Poem | null }) {
         <aside
           className={`${showLook ? "block" : "hidden"} w-full shrink-0 border-black/10 bg-paper p-5 lg:sticky lg:top-14 lg:block lg:h-[calc(100vh-3.5rem)] lg:w-[340px] lg:overflow-y-auto lg:border-l`}
         >
-          <LookPanel style={style} onChange={setStyle} />
+          <div className="mb-5 grid grid-cols-2 rounded-full bg-black/5 p-1 text-sm">
+            {(["look", "sound"] as const).map((p) => (
+              <button
+                key={p}
+                onClick={() => setPanel(p)}
+                className={`rounded-full py-1.5 transition ${panel === p ? "bg-white font-medium shadow-sm" : "text-muted hover:text-ink"}`}
+              >
+                {p === "look" ? "Look" : "Sound & voice"}
+              </button>
+            ))}
+          </div>
+          {panel === "look" ? (
+            <LookPanel style={style} onChange={setStyle} />
+          ) : (
+            <SoundPanel style={style} onChange={setStyle}>
+              {editor && <PreviewReader getDoc={() => cleanDoc(editor.getJSON())} style={style} />}
+            </SoundPanel>
+          )}
         </aside>
       </div>
     </div>

@@ -78,3 +78,43 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .ambient span { animation: none !important; opacity: 0.5; }
 }
+
+/* ---------- Reading along (highlights the line being read) ---------- */
+.poem-body .reading-now {
+  background: color-mix(in srgb, var(--poem-accent) 16%, transparent);
+  box-shadow: 0 0 0 0.25em color-mix(in srgb, var(--poem-accent) 16%, transparent);
+  border-radius: 0.2em;
+  transition: background 0.4s, box-shadow 0.4s;
+}
+
+/* ---------- In the editor: show which lines have reader settings ---------- */
+.poem-body .ProseMirror [data-tone],
+.poem-body .ProseMirror [data-sound],
+.poem-body .ProseMirror [data-pause] { position: relative; }
+.poem-body .ProseMirror [data-tone] { box-shadow: inset 3px 0 0 color-mix(in srgb, var(--poem-accent) 70%, transparent); padding-left: 0.5em; }
+.poem-body .ProseMirror [data-tone]::before {
+  content: "🎙 " attr(data-tone);
+  position: absolute;
+  right: 100%;
+  margin-right: 0.6rem;
+  top: 0.35em;
+  font: 500 11px/1 var(--font-modern), sans-serif;
+  color: var(--poem-muted);
+  white-space: nowrap;
+}
+.poem-body .ProseMirror [data-sound]::after {
+  content: "♪ " attr(data-sound);
+  display: inline-block;
+  margin-left: 0.6em;
+  padding: 0.15em 0.5em;
+  border-radius: 999px;
+  vertical-align: middle;
+  font: 500 11px/1.2 var(--font-modern), sans-serif;
+  color: var(--poem-on-accent);
+  background: var(--poem-accent);
+  opacity: 0.85;
+}
+.poem-body .ProseMirror [data-pause] { border-bottom: 1px dashed color-mix(in srgb, var(--poem-muted) 70%, transparent); }
+@media (max-width: 1279px) {
+  .poem-body .ProseMirror [data-tone]::before { display: none; }
+}
