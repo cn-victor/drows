@@ -1,0 +1,11 @@
+{
+  "editor.formatOnSave": false,
+  "editor.tabSize": 2,
+  "files.eol": "\n",
+  "files.exclude": { "**/.next": true, "**/node_modules": true },
+  "search.exclude": { "**/.next": true, "**/node_modules": true, "package-lock.json": true },
+  "typescript.tsdk": "node_modules/typescript/lib",
+  "tailwindCSS.experimental.classRegex": [["`([^`]*)`", "([^\s`]+)"]],
+  "git.enableSmartCommit": true,
+  "git.confirmSync": false
+}
