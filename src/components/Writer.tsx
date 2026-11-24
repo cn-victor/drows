@@ -26,7 +26,7 @@ export default function Writer({ initial, authorName, book }: Props) {
   const router = useRouter();
   const editing = initial?.id ?? null;
   // New chapters keep their own draft, separate from a new standalone poem.
-  const DRAFT = book ? `inkwell:draft:book:${book.id}` : "inkwell:draft";
+  const DRAFT = book ? `drows:draft:book:${book.id}` : "drows:draft";
   const [title, setTitle] = useState(initial?.title ?? "");
   const [style, setStyle] = useState<PoemStyle>(initial?.style ?? defaultStyle());
   const [saving, setSaving] = useState(false);
