@@ -11,23 +11,24 @@ import PoemCanvas from "./PoemCanvas";
 import PreviewReader from "./PreviewReader";
 import SoundPanel from "./SoundPanel";
 import Toolbar from "./Toolbar";
-import { editKeyFor, forgetPoem, rememberPoem } from "@/lib/mine";
 import { cleanDoc, cleanStyle, defaultStyle, LIMITS, type DocNode, type Poem, type PoemStyle } from "@/lib/poem";
 import { SITE_NAME } from "@/lib/site";
 
-const DRAFT = "inkwell:draft";
-const PEN = "inkwell:penname";
+type Draft = { title: string; doc: DocNode; style: PoemStyle };
 
-type Draft = { title: string; author: string; doc: DocNode; style: PoemStyle };
+type Props = {
+  initial: Poem | null; // the poem being edited (null for a new one)
+  authorName: string;
+  book: { id: string; title: string } | null; // set when writing a chapter
+};
 
-export default function Writer({ initial }: { initial: Poem | null }) {
+export default function Writer({ initial, authorName, book }: Props) {
   const router = useRouter();
   const editing = initial?.id ?? null;
+  // New chapters keep their own draft, separate from a new standalone poem.
+  const DRAFT = book ? `inkwell:draft:book:${book.id}` : "inkwell:draft";
   const [title, setTitle] = useState(initial?.title ?? "");
-  const [author, setAuthor] = useState(initial?.author ?? "");
   const [style, setStyle] = useState<PoemStyle>(initial?.style ?? defaultStyle());
-  const [editKey, setEditKey] = useState<string | null>(null);
-  const [notMine, setNotMine] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [showLook, setShowLook] = useState(false);
@@ -54,34 +55,24 @@ export default function Writer({ initial }: { initial: Poem | null }) {
             setStyle(cleanStyle(d.style)); // older drafts may miss newer settings
           }
         } catch {}
-        setAuthor((a) => a || localStorage.getItem(PEN) || "");
       }
       loaded.current = true;
     },
   });
-
-  // Find the secret edit key for a poem you are editing.
-  useEffect(() => {
-    if (!editing) return;
-    const key = editKeyFor(editing);
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setEditKey(key);
-    setNotMine(!key);
-  }, [editing]);
 
   // Save a draft as you type (new poems only).
   useEffect(() => {
     if (!editor || editing) return;
     const save = () => {
       if (!loaded.current) return;
-      localStorage.setItem(DRAFT, JSON.stringify({ title, author, doc: editor.getJSON() as DocNode, style } satisfies Draft));
+      localStorage.setItem(DRAFT, JSON.stringify({ title, doc: editor.getJSON() as DocNode, style } satisfies Draft));
     };
     save();
     editor.on("update", save);
     return () => {
       editor.off("update", save);
     };
-  }, [editor, editing, title, author, style]);
+  }, [editor, editing, title, style, DRAFT]);
 
   async function publish() {
     if (!editor) return;
@@ -91,12 +82,10 @@ export default function Writer({ initial }: { initial: Poem | null }) {
       const res = await fetch(editing ? `/api/poems/${editing}` : "/api/poems", {
         method: editing ? "PUT" : "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title, author, doc: editor.getJSON(), style, editKey }),
+        body: JSON.stringify({ title, doc: editor.getJSON(), style, bookId: book?.id }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Something went wrong. Please try again.");
-      rememberPoem({ id: data.id, editKey: data.editKey ?? editKey ?? "", title: title.trim() || "Untitled" });
-      if (author.trim()) localStorage.setItem(PEN, author.trim());
       if (!editing) localStorage.removeItem(DRAFT);
       router.push(`/p/${data.id}${editing ? "" : "?new=1"}`);
       router.refresh();
@@ -107,15 +96,10 @@ export default function Writer({ initial }: { initial: Poem | null }) {
   }
 
   async function remove() {
-    if (!editing || !editKey || !confirm("Delete this poem for good? This cannot be undone.")) return;
-    const res = await fetch(`/api/poems/${editing}`, {
-      method: "DELETE",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ editKey }),
-    });
+    if (!editing || !confirm("Delete this poem for good? Its likes and comments go too. This cannot be undone.")) return;
+    const res = await fetch(`/api/poems/${editing}`, { method: "DELETE" });
     if (res.ok) {
-      forgetPoem(editing);
-      router.push("/");
+      router.push(book ? `/b/${book.id}` : "/");
       router.refresh();
     } else setError("Could not delete this poem.");
   }
@@ -127,15 +111,21 @@ export default function Writer({ initial }: { initial: Poem | null }) {
     localStorage.removeItem(DRAFT);
   }
 
-  const justify = style.align === "center" ? "center" : style.align === "right" ? "flex-end" : "flex-start";
 
   return (
     <div className="flex min-h-screen flex-col">
       <header className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b border-black/10 bg-paper/90 px-4 backdrop-blur">
         <Link href="/" className="font-display text-2xl font-semibold tracking-tight">{SITE_NAME}</Link>
-        <span className="hidden text-sm text-muted sm:inline">{editing ? "Editing" : "New poem"}</span>
+        <span className="hidden truncate text-sm text-muted sm:inline">
+          {book ? (
+            <>
+              {editing ? "Editing a chapter of " : "New chapter in "}
+              <Link href={`/b/${book.id}`} className="underline">{book.title}</Link>
+            </>
+          ) : editing ? "Editing" : "New poem"}
+        </span>
         <div className="ml-auto flex items-center gap-2">
-          {editing && editKey && (
+          {editing && (
             <button onClick={remove} className="rounded-full px-3 py-1.5 text-sm text-red-700 hover:bg-red-50">Delete</button>
           )}
           {!editing && (
@@ -146,7 +136,7 @@ export default function Writer({ initial }: { initial: Poem | null }) {
           </button>
           <button
             onClick={publish}
-            disabled={saving || !editor || notMine}
+            disabled={saving || !editor}
             className="rounded-full bg-ink px-4 py-1.5 text-sm font-medium text-paper transition hover:opacity-90 disabled:opacity-40"
           >
             {saving ? "Saving…" : editing ? "Save changes" : "Publish"}
@@ -155,11 +145,6 @@ export default function Writer({ initial }: { initial: Poem | null }) {
       </header>
 
       {error && <p className="bg-red-50 px-4 py-2 text-center text-sm text-red-800">{error}</p>}
-      {notMine && (
-        <p className="bg-amber-50 px-4 py-2 text-center text-sm text-amber-900">
-          This poem was published from another browser, so it can only be changed there.
-        </p>
-      )}
 
       <div className="flex flex-1 flex-col lg:flex-row">
         <PoemCanvas style={style} className={`flex-1 ${showLook ? "hidden lg:block" : ""}`}>
@@ -179,18 +164,9 @@ export default function Writer({ initial }: { initial: Poem | null }) {
               className="w-full bg-transparent text-4xl font-semibold leading-tight outline-none placeholder:text-[var(--poem-muted)] placeholder:opacity-60 sm:text-5xl"
               style={{ fontFamily: "var(--poem-font)", textAlign: style.align }}
             />
-            <div className="mt-2 flex items-baseline gap-1.5 text-lg" style={{ color: "var(--poem-muted)", fontFamily: "var(--poem-font)", justifyContent: justify }}>
-              <span className="italic">by</span>
-              <input
-                value={author}
-                onChange={(e) => setAuthor(e.target.value)}
-                maxLength={LIMITS.author}
-                placeholder="your pen name"
-                aria-label="Pen name"
-                className="min-w-0 bg-transparent outline-none placeholder:text-[var(--poem-muted)] placeholder:opacity-60"
-                style={{ width: `${Math.max(author.length, 13) + 1}ch` }}
-              />
-            </div>
+            <p className="mt-2 text-lg italic" style={{ color: "var(--poem-muted)", fontFamily: "var(--poem-font)", textAlign: style.align }}>
+              by {authorName}
+            </p>
             <EditorContent editor={editor} className="poem-body mt-8" />
           </div>
         </PoemCanvas>

@@ -1,64 +1,91 @@
 import Link from "next/link";
-import { connection } from "next/server";
 import { Suspense } from "react";
-import MyPoems from "@/components/MyPoems";
-import PoemCanvas from "@/components/PoemCanvas";
-import { excerpt } from "@/lib/poem";
+import BookCard from "@/components/BookCard";
+import { PoemGrid } from "@/components/PoemCard";
+import SiteHeader from "@/components/SiteHeader";
 import { SITE_NAME, SITE_TAGLINE } from "@/lib/site";
-import { latestPoems } from "@/server/db";
+import { currentUser } from "@/server/auth";
+import { latestBooks } from "@/server/books";
+import { followingFeed, latestPoems } from "@/server/poems";
 
-async function Latest() {
-  await connection(); // always show the newest poems
-  const poems = await latestPoems(24);
-  if (!poems.length) {
-    return (
-      <p className="rounded-2xl border border-dashed border-black/15 p-10 text-center text-muted">
-        No poems yet. Yours could be the first.
-      </p>
-    );
-  }
+function Hero() {
   return (
-    <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-      {poems.map((p) => (
-        <Link key={p.id} href={`/p/${p.id}`} className="group block overflow-hidden rounded-2xl shadow-sm ring-1 ring-black/5 transition hover:-translate-y-0.5 hover:shadow-lg">
-          <PoemCanvas style={{ ...p.style, ambient: "none" }} className="h-64">
-            <div className="flex h-64 flex-col p-6" style={{ textAlign: p.style.align }}>
-              <h3 className="text-2xl font-semibold leading-tight" style={{ fontFamily: "var(--poem-font)" }}>{p.title}</h3>
-              <p className="mt-1 text-sm italic" style={{ color: "var(--poem-muted)", fontFamily: "var(--poem-font)" }}>by {p.author}</p>
-              <div className="mt-4 space-y-0.5 overflow-hidden text-[17px] leading-snug opacity-90" style={{ fontFamily: "var(--poem-font)", whiteSpace: "pre-wrap" }}>
-                {excerpt(p.doc, 4).map((line, i) => (
-                  <p key={i} className="overflow-hidden text-ellipsis whitespace-pre">{line}</p>
-                ))}
-              </div>
-            </div>
-          </PoemCanvas>
-        </Link>
-      ))}
-    </div>
+    <section className="relative overflow-hidden" style={{ background: "radial-gradient(ellipse at top, #fbf4e2 0%, #f1e4c6 75%)" }}>
+      <div className="mx-auto flex max-w-5xl flex-col items-center px-6 pb-20 pt-20 text-center">
+        <p className="text-sm uppercase tracking-[0.3em] text-muted">a home for poems &amp; books</p>
+        <h1 className="mt-4 font-display text-6xl font-semibold tracking-tight sm:text-7xl">{SITE_NAME}</h1>
+        <p className="mt-5 max-w-xl font-serif text-xl italic text-muted">{SITE_TAGLINE}</p>
+        <div className="mt-10 flex gap-3">
+          <Link href="/signup" className="rounded-full bg-ink px-7 py-3 text-base font-medium text-paper shadow-md transition hover:-translate-y-0.5 hover:shadow-lg">
+            Start writing
+          </Link>
+          <Link href="#latest" className="rounded-full px-7 py-3 text-base ring-1 ring-black/15 hover:bg-black/5">Read poems</Link>
+        </div>
+      </div>
+    </section>
   );
 }
 
-export default function Home() {
-  return (
-    <main className="flex-1">
-      <section className="relative overflow-hidden" style={{ background: "radial-gradient(ellipse at top, #fbf4e2 0%, #f1e4c6 75%)" }}>
-        <div className="mx-auto flex max-w-5xl flex-col items-center px-6 pb-20 pt-24 text-center">
-          <p className="text-sm uppercase tracking-[0.3em] text-muted">a home for poems &amp; books</p>
-          <h1 className="mt-4 font-display text-6xl font-semibold tracking-tight sm:text-7xl">{SITE_NAME}</h1>
-          <p className="mt-5 max-w-xl font-serif text-xl italic text-muted">{SITE_TAGLINE}</p>
-          <Link href="/write" className="mt-10 rounded-full bg-ink px-7 py-3 text-base font-medium text-paper shadow-md transition hover:-translate-y-0.5 hover:shadow-lg">
-            Write a poem
-          </Link>
-        </div>
-      </section>
+async function Home({ searchParams }: { searchParams: PageProps<"/">["searchParams"] }) {
+  const [sp, me] = await Promise.all([searchParams, currentUser()]);
+  const tab = me && sp.feed !== "latest" ? "following" : "latest";
+  const poems = tab === "following" && me ? await followingFeed(me.id) : await latestPoems(me?.id);
+  const books = await latestBooks(8);
 
-      <div className="mx-auto max-w-6xl px-6 py-14">
-        <MyPoems />
-        <h2 className="mb-6 font-display text-3xl font-semibold">Latest poems</h2>
-        <Suspense fallback={<p className="text-muted">Gathering poems…</p>}>
-          <Latest />
-        </Suspense>
+  return (
+    <>
+      {!me && <Hero />}
+      <div id="latest" className="mx-auto max-w-6xl px-6 py-12">
+        {me && (
+          <nav className="mb-8 flex items-center gap-1 border-b border-black/10">
+            {(["following", "latest"] as const).map((t) => (
+              <Link
+                key={t}
+                href={t === "following" ? "/" : "/?feed=latest"}
+                className={`border-b-2 px-4 py-2.5 text-sm transition ${tab === t ? "border-ink font-medium" : "border-transparent text-muted hover:text-ink"}`}
+              >
+                {t === "following" ? "Following" : "Latest"}
+              </Link>
+            ))}
+          </nav>
+        )}
+        {!me && <h2 className="mb-6 font-display text-3xl font-semibold">Latest poems</h2>}
+        <PoemGrid
+          poems={poems}
+          viewerId={me?.id ?? null}
+          empty={
+            tab === "following" ? (
+              <>
+                Your feed shows poems from writers you follow, and what they repost.{" "}
+                <Link href="/?feed=latest" className="underline">Browse the latest poems</Link> to find writers to follow.
+              </>
+            ) : (
+              "No poems yet. Yours could be the first."
+            )
+          }
+        />
+        {books.length > 0 && (
+          <section className="mt-16">
+            <h2 className="mb-6 font-display text-3xl font-semibold">Books</h2>
+            <div className="grid grid-cols-2 gap-6 sm:grid-cols-3 lg:grid-cols-4">
+              {books.map((b) => <BookCard key={b.id} book={b} />)}
+            </div>
+          </section>
+        )}
       </div>
-    </main>
+    </>
+  );
+}
+
+export default function HomePage(props: PageProps<"/">) {
+  return (
+    <>
+      <SiteHeader />
+      <main className="flex-1">
+        <Suspense fallback={<p className="mx-auto max-w-6xl px-6 py-12 text-muted">Gathering poems…</p>}>
+          <Home searchParams={props.searchParams} />
+        </Suspense>
+      </main>
+    </>
   );
 }

@@ -31,8 +31,8 @@ time someone listens. `.env.local` is private and is never uploaded to GitHub.
 | --- | --- | --- |
 | 1 | Writing editor, themes, shareable poem pages | **Built** |
 | 2 | Background sounds & music, sound effects, AI voice reader with tones | **Built** |
-| 3 | Accounts, profiles, feed, likes, reposts, comments, books | Next |
-| 4 | Gifting on Solana (writer gets 85%, platform keeps 15%) | |
+| 3 | Accounts, profiles, follows, feed, likes, reposts, comments, books with chapters | **Built** |
+| 4 | Gifting on Solana (writer gets 85%, platform keeps 15%) | Next |
 | 5 | Writers' pool: 20% of platform income shared by likes/reposts, switched on at 1,000 users and $1,000/month | |
 
 ## Where things live

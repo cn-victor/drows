@@ -27,11 +27,25 @@ export type DocNode = {
 export type Poem = {
   id: string;
   title: string;
-  author: string;
+  author: string; // the name shown under the title
+  username: string | null; // the writer's account (null for poems from before accounts)
+  authorId: string | null;
   doc: DocNode;
   style: PoemStyle;
   createdAt: number;
   updatedAt: number;
+  // books
+  bookId: string | null;
+  bookTitle: string | null;
+  chapter: number | null;
+  // social
+  likes: number;
+  reposts: number;
+  comments: number;
+  liked: boolean; // by the person looking at it
+  reposted: boolean;
+  repostedBy?: { username: string; name: string } | null; // when it shows in a feed because someone reposted it
+  feedTime?: number;
 };
 
 export const SIZE_PX: Record<PoemStyle["size"], string> = { s: "18px", m: "22px", l: "27px" };

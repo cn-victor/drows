@@ -1,7 +1,7 @@
 import { connection } from "next/server";
 import { buildSegments } from "@/lib/segments";
 import { readingOf, toneOf } from "@/lib/voice";
-import { getPoem } from "@/server/db";
+import { getPoem } from "@/server/poems";
 import { audioResponse } from "@/server/files";
 import { speech } from "@/server/tts";
 

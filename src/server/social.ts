@@ -1,0 +1,61 @@
+// Likes, reposts, comments and follows.
+// Writers can't like or repost their own work: later, likes and reposts decide writers' earnings.
+import "server-only";
+import { all, newId, one, run } from "./db";
+
+async function authorOf(poemId: string): Promise<string | null | undefined> {
+  const r = await one("SELECT author_id FROM poems WHERE id = ?", [poemId]);
+  return r ? (r.author_id as string | null) : undefined; // undefined = no such poem
+}
+
+/** Turns a like or repost on/off. Returns the new state, or an error message. */
+export async function toggle(kind: "likes" | "reposts", userId: string, poemId: string, on: boolean): Promise<boolean | string> {
+  const author = await authorOf(poemId);
+  if (author === undefined) return "This poem no longer exists.";
+  if (author === userId) return kind === "likes" ? "You can't like your own poem." : "You can't repost your own poem.";
+  if (on) await run(`INSERT OR IGNORE INTO ${kind} (user_id, poem_id, created_at) VALUES (?, ?, ?)`, [userId, poemId, Date.now()]);
+  else await run(`DELETE FROM ${kind} WHERE user_id = ? AND poem_id = ?`, [userId, poemId]);
+  return on;
+}
+
+export type Comment = { id: string; body: string; createdAt: number; userId: string; username: string; name: string };
+
+export async function commentsOn(poemId: string): Promise<Comment[]> {
+  return (
+    await all(
+      `SELECT c.*, u.username, u.display_name FROM comments c JOIN users u ON u.id = c.user_id
+       WHERE c.poem_id = ? ORDER BY c.created_at ASC LIMIT 500`,
+      [poemId],
+    )
+  ).map((r) => ({
+    id: String(r.id),
+    body: String(r.body),
+    createdAt: Number(r.created_at),
+    userId: String(r.user_id),
+    username: String(r.username),
+    name: String(r.display_name),
+  }));
+}
+
+export async function addComment(userId: string, poemId: string, body: string): Promise<string | null> {
+  const text = body.trim().slice(0, 1000);
+  if (!text) return "Write something first.";
+  if ((await authorOf(poemId)) === undefined) return "This poem no longer exists.";
+  await run("INSERT INTO comments (id, poem_id, user_id, body, created_at) VALUES (?, ?, ?, ?, ?)", [newId(8), poemId, userId, text, Date.now()]);
+  return null;
+}
+
+/** The comment's writer, or the poem's writer, can remove a comment. */
+export async function deleteComment(userId: string, commentId: string): Promise<boolean> {
+  const n = await run(
+    `DELETE FROM comments WHERE id = ? AND (user_id = ? OR poem_id IN (SELECT id FROM poems WHERE author_id = ?))`,
+    [commentId, userId, userId],
+  );
+  return n > 0;
+}
+
+export async function setFollow(userId: string, targetId: string, on: boolean) {
+  if (userId === targetId) return;
+  if (on) await run("INSERT OR IGNORE INTO follows (follower_id, followee_id, created_at) VALUES (?, ?, ?)", [userId, targetId, Date.now()]);
+  else await run("DELETE FROM follows WHERE follower_id = ? AND followee_id = ?", [userId, targetId]);
+}
