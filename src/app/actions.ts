@@ -7,6 +7,8 @@ import { createBook, deleteBook, getBook, moveChapter, updateBook } from "@/serv
 import { one } from "@/server/db";
 import { claimPoems } from "@/server/poems";
 import { addComment, deleteComment, setFollow, toggle } from "@/server/social";
+import { confirmGift, setWallet, startGift, type GiftOrder } from "@/server/gifts";
+import type { Currency } from "@/lib/chain";
 
 export type FormState = { error?: string; ok?: boolean; values?: Record<string, string> } | null;
 
@@ -146,4 +148,31 @@ export async function reorderChapter(bookId: string, poemId: string, dir: -1 | 1
   if (!me) return;
   await moveChapter(bookId, me.id, poemId, dir);
   refresh();
+}
+
+// ---------- wallets and gifts ----------
+
+export async function linkWallet(address: string, kind: "created" | "own", proof?: string): Promise<{ error?: string }> {
+  const me = await currentUser();
+  if (!me) return { error: "Please log in again." };
+  const err = await setWallet(me.id, address, kind, proof);
+  if (err) return { error: err };
+  refresh();
+  return {};
+}
+
+export async function beginGift(poemId: string, currency: Currency, amount: number, message: string): Promise<GiftOrder | { error: string }> {
+  const me = await currentUser();
+  if (!me) return { error: "Please log in to send a gift." };
+  const r = await startGift(me.id, poemId, currency, amount, message);
+  return typeof r === "string" ? { error: r } : r;
+}
+
+export async function finishGift(giftId: string, signature: string): Promise<{ error?: string }> {
+  const me = await currentUser();
+  if (!me) return { error: "Please log in again." };
+  const err = await confirmGift(me.id, giftId, signature);
+  if (err) return { error: err };
+  refresh();
+  return {};
 }

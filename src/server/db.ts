@@ -84,6 +84,29 @@ const SCHEMA = `
     PRIMARY KEY (follower_id, followee_id)
   );
   CREATE INDEX IF NOT EXISTS follows_followee ON follows (followee_id);
+
+  -- Gifts sent on Solana. Amounts are whole blockchain units (lamports / micro-USDC), kept as text.
+  CREATE TABLE IF NOT EXISTS gifts (
+    id TEXT PRIMARY KEY,
+    poem_id TEXT NOT NULL,
+    from_user_id TEXT NOT NULL,
+    to_user_id TEXT NOT NULL,
+    currency TEXT NOT NULL,
+    total_units TEXT NOT NULL,
+    writer_units TEXT NOT NULL,
+    fee_units TEXT NOT NULL,
+    recipient TEXT NOT NULL,
+    treasury TEXT NOT NULL,
+    message TEXT NOT NULL DEFAULT '',
+    status TEXT NOT NULL,
+    signature TEXT UNIQUE,
+    sender_address TEXT,
+    created_at INTEGER NOT NULL,
+    confirmed_at INTEGER
+  );
+  CREATE INDEX IF NOT EXISTS gifts_to ON gifts (to_user_id, status, created_at DESC);
+  CREATE INDEX IF NOT EXISTS gifts_from ON gifts (from_user_id, status, created_at DESC);
+  CREATE INDEX IF NOT EXISTS gifts_poem ON gifts (poem_id, status);
 `;
 
 // Columns added after the first version. Each runs once, if the column is missing.
@@ -91,6 +114,8 @@ const ADDED_COLUMNS: [table: string, column: string, definition: string][] = [
   ["poems", "author_id", "TEXT"],
   ["poems", "book_id", "TEXT"],
   ["poems", "chapter_no", "INTEGER"],
+  ["users", "wallet_address", "TEXT"],
+  ["users", "wallet_kind", "TEXT"], // "created" (made here, kept in the writer's browser) or "own" (an address they pasted)
 ];
 
 async function migrate(c: Client) {

@@ -8,11 +8,14 @@ import PoemActions from "@/components/PoemActions";
 import PoemCanvas from "@/components/PoemCanvas";
 import PoemPlayer from "@/components/PoemPlayer";
 import ShareBar from "@/components/ShareBar";
+import GiftButton from "@/components/wallet/GiftButton";
 import { excerpt, renderDoc, type Poem } from "@/lib/poem";
 import { buildSegments } from "@/lib/segments";
 import { SITE_NAME } from "@/lib/site";
 import { currentUser } from "@/server/auth";
 import { chaptersOf, getPoem } from "@/server/poems";
+import { one } from "@/server/db";
+import { giftCount } from "@/server/gifts";
 import { commentsOn } from "@/server/social";
 
 export async function generateMetadata(props: PageProps<"/p/[id]">): Promise<Metadata> {
@@ -65,7 +68,11 @@ async function PoemView({ params, searchParams }: { params: PageProps<"/p/[id]">
   if (!poem) notFound();
   const { style } = poem;
   const isOwner = !!me && me.id === poem.authorId;
-  const comments = await commentsOn(poem.id);
+  const [comments, gifts, writer] = await Promise.all([
+    commentsOn(poem.id),
+    giftCount(poem.id),
+    poem.authorId ? one("SELECT wallet_address FROM users WHERE id = ?", [poem.authorId]) : null,
+  ]);
   const justify = style.align === "center" ? "justify-center" : style.align === "right" ? "justify-end" : "justify-start";
 
   return (
@@ -96,7 +103,7 @@ async function PoemView({ params, searchParams }: { params: PageProps<"/p/[id]">
         {/* The poem was cleaned when it was saved and loaded, so only safe formatting reaches the page. */}
         <div data-poem className="poem-body mt-10" dangerouslySetInnerHTML={{ __html: renderDoc(poem.doc) }} />
 
-        <div className={`mt-12 flex ${justify}`}>
+        <div className={`mt-12 flex flex-wrap items-center gap-1 ${justify}`}>
           <PoemActions
             poemId={poem.id}
             likes={poem.likes}
@@ -108,6 +115,16 @@ async function PoemView({ params, searchParams }: { params: PageProps<"/p/[id]">
             loggedIn={!!me}
             commentsHref="#comments"
           />
+          {poem.authorId && (
+            <GiftButton
+              poemId={poem.id}
+              writerName={poem.author}
+              writerHasWallet={!!writer?.wallet_address}
+              isOwner={isOwner}
+              viewer={me ? { id: me.id, walletAddress: me.walletAddress } : null}
+              giftCount={gifts}
+            />
+          )}
         </div>
 
         <ChapterNav poem={poem} where="bottom" />

@@ -12,7 +12,16 @@ const scrypt = promisify(scryptCb) as (pw: string, salt: Buffer, len: number) =>
 const COOKIE = "ink_session";
 const SESSION_DAYS = 30;
 
-export type User = { id: string; username: string; name: string; email: string; bio: string; createdAt: number };
+export type User = {
+  id: string;
+  username: string;
+  name: string;
+  email: string;
+  bio: string;
+  createdAt: number;
+  walletAddress: string | null; // where gifts are paid
+  walletKind: "created" | "own" | null;
+};
 
 const toUser = (r: Record<string, unknown>): User => ({
   id: String(r.id),
@@ -21,6 +30,8 @@ const toUser = (r: Record<string, unknown>): User => ({
   email: String(r.email),
   bio: String(r.bio ?? ""),
   createdAt: Number(r.created_at),
+  walletAddress: r.wallet_address ? String(r.wallet_address) : null,
+  walletKind: r.wallet_kind === "created" || r.wallet_kind === "own" ? r.wallet_kind : null,
 });
 
 async function hashPassword(pw: string) {
@@ -61,7 +72,7 @@ export async function createUser(input: { username: string; name: string; email:
   await run("INSERT INTO users (id, username, display_name, email, pass_hash, bio, created_at) VALUES (?, ?, ?, ?, ?, '', ?)", [
     id, username, name, email, await hashPassword(input.password), now,
   ]);
-  return { id, username, name, email, bio: "", createdAt: now };
+  return { id, username, name, email, bio: "", createdAt: now, walletAddress: null, walletKind: null };
 }
 
 /** Checks an email/username and password. Returns the user, or null if they don't match. */

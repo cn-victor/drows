@@ -25,6 +25,18 @@ Without this, poems are read by the browser's free built-in voice.
 Each part of a poem is recorded once and saved in `data/voice/`, so you pay for it once, not every
 time someone listens. `.env.local` is private and is never uploaded to GitHub.
 
+## Gifts and wallets (Solana)
+
+- Every writer can create a wallet on the **Wallet** page. It lives in their browser, locked with a wallet
+  password, and backed up by 12 recovery words (it also opens in Phantom or Solflare). The platform only
+  stores the public address, never keys or money.
+- Readers press **🎁 Gift** on a poem. One Solana payment sends 85% to the writer and 15% to the platform
+  wallet (`PLATFORM_WALLET` in `.env.local`). The server checks the payment on the blockchain before
+  recording it.
+- It runs on Solana's **test network** (free test money). Get test SOL at faucet.solana.com and test USDC at
+  faucet.circle.com. Before switching to real money (`NEXT_PUBLIC_SOLANA_CLUSTER=mainnet-beta`): put your own
+  wallet address in `PLATFORM_WALLET`, and get legal advice about taking fees on payments.
+
 ## The plan
 
 | Stage | What | Status |
@@ -32,7 +44,7 @@ time someone listens. `.env.local` is private and is never uploaded to GitHub.
 | 1 | Writing editor, themes, shareable poem pages | **Built** |
 | 2 | Background sounds & music, sound effects, AI voice reader with tones | **Built** |
 | 3 | Accounts, profiles, follows, feed, likes, reposts, comments, books with chapters | **Built** |
-| 4 | Gifting on Solana (writer gets 85%, platform keeps 15%) | Next |
+| 4 | Gifting on Solana (writer gets 85%, platform keeps 15%), on the test network | **Built** |
 | 5 | Writers' pool: 20% of platform income shared by likes/reposts, switched on at 1,000 users and $1,000/month | |
 
 ## Where things live

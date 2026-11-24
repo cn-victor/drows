@@ -16,6 +16,7 @@ async function HeaderUser() {
   }
   return (
     <>
+      <Link href="/wallet" className="rounded-full px-3 py-1.5 text-sm hover:bg-black/5" title="Your wallet and gifts">Wallet</Link>
       <Link href="/write" className="rounded-full bg-ink px-4 py-1.5 text-sm font-medium text-paper hover:opacity-90">Write</Link>
       <Link href={`/u/${me.username}`} className="flex items-center gap-2 rounded-full py-1 pl-1 pr-3 text-sm hover:bg-black/5" title="Your profile">
         <Avatar name={me.name} username={me.username} size={30} />
