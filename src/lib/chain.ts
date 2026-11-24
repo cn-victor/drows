@@ -51,4 +51,4 @@ export const explorerAddress = (a: string) => `https://explorer.solana.com/addre
 export const isAddress = (s: string) => /^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(s);
 
 /** The note a wallet signs to prove it belongs to an account (browser and server must agree on it). */
-export const walletProofMessage = (userId: string, address: string) => `Link wallet ${address} to Inkwell account ${userId}`;
+export const walletProofMessage = (userId: string, address: string) => `Link wallet ${address} to Drows account ${userId}`;

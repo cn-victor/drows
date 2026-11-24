@@ -9,6 +9,7 @@ import { promisify } from "node:util";
 import { all, newId, one, run, sha256 } from "./db";
 
 const scrypt = promisify(scryptCb) as (pw: string, salt: Buffer, len: number) => Promise<Buffer>;
+// Internal label from the working name; kept so nobody gets logged out.
 const COOKIE = "ink_session";
 const SESSION_DAYS = 30;
 
@@ -49,7 +50,7 @@ async function checkPassword(pw: string, stored: string) {
 
 // ---------- rules for new accounts ----------
 
-const RESERVED = new Set(["admin", "inkwell", "support", "help", "about", "settings", "login", "signup", "logout", "write", "api", "u", "b", "p", "books", "feed", "explore", "me", "null", "undefined"]);
+const RESERVED = new Set(["admin", "drows", "inkwell", "support", "help", "about", "settings", "login", "signup", "logout", "write", "api", "u", "b", "p", "books", "feed", "explore", "me", "null", "undefined"]);
 
 export function checkUsername(u: string): string | null {
   if (!/^[a-z0-9_]{3,20}$/.test(u)) return "Usernames are 3–20 letters, numbers or underscores (no spaces).";

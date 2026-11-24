@@ -9,6 +9,7 @@ import { wordlist } from "@scure/bip39/wordlists/english.js";
 import { ed25519 } from "@noble/curves/ed25519";
 import { Keypair } from "@solana/web3.js";
 
+// Internal label from the working name; kept so wallets already saved in browsers still open.
 const STORE = (userId: string) => `inkwell:wallet:${userId}`;
 const PBKDF2_ROUNDS = 310_000;
 
