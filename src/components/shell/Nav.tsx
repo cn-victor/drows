@@ -3,7 +3,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import Avatar from "../Avatar";
-import { BookIcon, DrowsMark, FlowIcon, GearIcon, HomeIcon, MoonIcon, QuillIcon, SearchIcon, SunIcon, UserIcon, WalletIcon } from "../icons";
+import { BookIcon, DrowsMark, GearIcon, HomeIcon, MoonIcon, QuillIcon, SearchIcon, SunIcon, UserIcon, WalletIcon } from "../icons";
 import { SITE_NAME } from "@/lib/site";
 
 type Me = { username: string; name: string } | null;
@@ -11,7 +11,6 @@ type Me = { username: string; name: string } | null;
 function useNavItems(me: Me) {
   const items = [
     { href: "/", label: "Home", Icon: HomeIcon },
-    { href: "/flow", label: "Flow", Icon: FlowIcon },
     { href: "/explore", label: "Explore", Icon: SearchIcon },
     { href: "/books", label: "Books", Icon: BookIcon },
   ];
@@ -109,27 +108,28 @@ export function SideNav({ me }: { me: Me }) {
   );
 }
 
-/** The bottom bar on phones, plus the round Write button. */
+/** The bottom bar on phones. Signed in: Home, Explore, ＋ Write, Wallet, Profile (books are in Explore). */
 export function BottomNav({ me }: { me: Me }) {
   const path = usePathname();
-  const items = useNavItems(me).filter((i) => i.label !== "Settings" && i.label !== "Books");
+  const all = useNavItems(me);
+  const pick = (label: string) => all.find((i) => i.label === label)!;
+  const left = me ? [pick("Home"), pick("Explore")] : [pick("Home"), pick("Explore"), pick("Books")];
+  const right = me ? [pick("Wallet"), pick("Profile")] : [];
+  const tab = ({ href, label, Icon }: (typeof all)[number]) => (
+    <Link key={href} href={href} aria-label={label} className="flex h-full flex-1 items-center justify-center">
+      <Icon size={26} filled={isActive(path, href)} />
+    </Link>
+  );
   return (
     <>
-      {me && !path.startsWith("/p/") && path !== "/flow" && (
-        <Link
-          href="/write"
-          className="fixed bottom-20 right-4 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-accent text-on-accent shadow-lg sm:hidden"
-          aria-label="Write"
-        >
-          <QuillIcon size={26} />
-        </Link>
-      )}
       <nav className="fixed inset-x-0 bottom-0 z-40 flex h-14 items-center justify-around border-t border-line bg-bg/90 backdrop-blur sm:hidden">
-        {items.map(({ href, label, Icon }) => (
-          <Link key={href} href={href} aria-label={label} className="flex h-full flex-1 items-center justify-center">
-            <Icon size={26} filled={isActive(path, href)} />
+        {left.map(tab)}
+        {me && (
+          <Link href="/write" aria-label="Write" className="flex h-full flex-1 items-center justify-center">
+            <span className="flex h-9 w-12 items-center justify-center rounded-xl bg-accent text-2xl font-bold leading-none text-on-accent">+</span>
           </Link>
-        ))}
+        )}
+        {right.map(tab)}
         {!me && (
           <Link href="/login" className="flex h-full flex-1 items-center justify-center" aria-label="Log in">
             <UserIcon size={26} />

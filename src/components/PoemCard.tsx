@@ -4,8 +4,9 @@ import Avatar from "./Avatar";
 import { BookIcon, RepostIcon } from "./icons";
 import PoemActions from "./PoemActions";
 import PoemCanvas from "./PoemCanvas";
+import SlidesPreview from "./SlidesPreview";
 import TimeAgo from "./TimeAgo";
-import { excerpt, slideBlocks, type Poem } from "@/lib/poem";
+import { excerpt, renderSlides, slideBlocks, type Poem } from "@/lib/poem";
 import { SOUNDSCAPES } from "@/lib/sounds";
 
 /** The poem's first lines on its own theme, like the picture in a post. */
@@ -14,6 +15,17 @@ export function PoemPreview({ poem: p, lines = 6 }: { poem: Poem; lines?: number
   const m = p.style.music;
   const slides = p.style.layout === "slides" ? slideBlocks(p.doc, p.style).length : 1;
   const music = m.kind === "scape" ? SOUNDSCAPES.find((s) => s.id === m.id)?.label : m.kind === "upload" ? m.name : null;
+  if (slides > 1) {
+    // Slides poems swipe sideways right in the feed, like a multi-photo post.
+    return (
+      <PoemCanvas style={{ ...p.style, ambient: "none" }} className="overflow-hidden rounded-2xl border border-line">
+        <SlidesPreview title={p.title} author={p.author} slides={renderSlides(p.doc, p.style)} align={p.style.align} />
+        <p className="px-6 pb-4 text-xs font-medium" style={{ color: "var(--poem-muted)", fontFamily: "var(--font-modern)", textAlign: p.style.align }}>
+          ⧉ {slides} slides{music ? ` · ♫ ${music}` : ""} · ▶ Listen
+        </p>
+      </PoemCanvas>
+    );
+  }
   return (
     <PoemCanvas style={{ ...p.style, ambient: "none" }} className="overflow-hidden rounded-2xl border border-line">
       <div className="px-6 py-5" style={{ textAlign: p.style.align }}>

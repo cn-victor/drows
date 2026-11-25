@@ -6,6 +6,10 @@ const nextConfig: NextConfig = {
   cacheComponents: true,
   partialPrefetching: true,
   serverExternalPackages: ["@libsql/client"],
+  // Flow is now the home page.
+  async redirects() {
+    return [{ source: "/flow", destination: "/", permanent: false }];
+  },
   turbopack: {
     rules: {
       "*.css": {
