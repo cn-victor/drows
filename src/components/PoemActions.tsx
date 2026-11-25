@@ -119,7 +119,7 @@ export default function PoemActions(p: Props) {
   const icon = p.big ? 22 : 18.75;
   const text = p.big ? "text-sm" : "text-[13px]";
   return (
-    <div className={`relative flex items-center justify-between ${p.big ? "px-2 py-1" : "max-w-[440px] pr-2"}`}>
+    <div className={`relative flex items-center justify-between ${p.big ? "px-2 py-1" : "px-1"}`}>
       <Btn text={text} href={`/p/${p.poemId}#comments`} label="Comments" count={p.comments} color="group-hover:bg-accent/15 text-accent hover:text-accent">
         <CommentIcon size={icon} />
       </Btn>

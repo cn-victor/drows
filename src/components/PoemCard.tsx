@@ -73,7 +73,7 @@ export default function PoemPost({ poem: p, viewerId }: { poem: Poem; viewerId: 
           <Link href={href} className="mt-2 block" aria-label={`Read ${p.title}`}>
             <PoemPreview poem={p} />
           </Link>
-          <div className="mt-1.5">
+          <div className="mt-3">
             <PoemActions
               poemId={p.id}
               likes={p.likes}
