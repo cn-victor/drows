@@ -176,22 +176,3 @@ export async function finishGift(giftId: string, signature: string): Promise<{ e
   refresh();
   return {};
 }
-
-// ---------- comments in the swipe viewer ----------
-
-export async function loadComments(poemId: string) {
-  const { commentsOn } = await import("@/server/social");
-  return commentsOn(poemId);
-}
-
-export async function sendReply(poemId: string, body: string): Promise<{ error?: string }> {
-  const me = await currentUser();
-  if (!me) return { error: "Please log in to reply." };
-  const err = await addComment(me.id, poemId, body);
-  return err ? { error: err } : {};
-}
-
-export async function deleteReply(commentId: string): Promise<void> {
-  const me = await currentUser();
-  if (me) await deleteComment(me.id, commentId);
-}
