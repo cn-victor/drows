@@ -5,7 +5,7 @@ import { all, newId, one, run, sha256, type Row } from "./db";
 
 // Every poem comes with its writer, book, like/repost/comment counts, and whether the viewer liked/reposted it.
 const SELECT = `
-  SELECT p.*, u.username, u.display_name, b.title AS book_title,
+  SELECT p.*, u.username, u.display_name, u.wallet_address AS author_wallet, b.title AS book_title,
     (SELECT COUNT(*) FROM likes WHERE poem_id = p.id) AS like_count,
     (SELECT COUNT(*) FROM reposts WHERE poem_id = p.id) AS repost_count,
     (SELECT COUNT(*) FROM comments WHERE poem_id = p.id) AS comment_count,
@@ -34,6 +34,7 @@ function toPoem(r: Row): Poem {
     reposts: Number(r.repost_count ?? 0),
     comments: Number(r.comment_count ?? 0),
     gifts: Number(r.gift_count ?? 0),
+    authorHasWallet: !!r.author_wallet,
     liked: !!Number(r.liked ?? 0),
     reposted: !!Number(r.reposted ?? 0),
   };

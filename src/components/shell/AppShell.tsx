@@ -10,7 +10,23 @@ import { latestBooks } from "@/server/books";
 import { suggestedWriters } from "@/server/social";
 
 /** Every page's frame: menu on the left, the page in the middle, extras on the right. */
-export default function AppShell({ children, wide = false }: { children: ReactNode; wide?: boolean }) {
+export default function AppShell({ children, wide = false, immersive = false }: { children: ReactNode; wide?: boolean; immersive?: boolean }) {
+  if (immersive) {
+    // Full-screen pages (the swipe feed): menu on the left, the page fills the rest, no sidebar.
+    return (
+      <div className="flex w-full">
+        <header className="hidden shrink-0 sm:flex">
+          <Suspense fallback={<div className="w-[88px] xl:w-[260px]" />}>
+            <Side />
+          </Suspense>
+        </header>
+        <main className="min-w-0 flex-1 sm:border-l sm:border-line">{children}</main>
+        <Suspense fallback={null}>
+          <Bottom />
+        </Suspense>
+      </div>
+    );
+  }
   return (
     <div className="mx-auto flex w-full max-w-[1280px] justify-center">
       <header className="hidden shrink-0 sm:flex sm:justify-end">

@@ -1,4 +1,4 @@
-import { Extension } from "@tiptap/react";
+import { Extension, Node } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import TextAlign from "@tiptap/extension-text-align";
 import { Color, FontFamily, FontSize, TextStyle } from "@tiptap/extension-text-style";
@@ -25,6 +25,20 @@ const LineVoice = Extension.create({
   },
 });
 
+// Marks where a new slide starts (used when the poem's layout is "Slides").
+const SlideBreak = Node.create({
+  name: "slideBreak",
+  group: "block",
+  atom: true,
+  selectable: true,
+  parseHTML: () => [{ tag: "hr[data-slide]" }],
+  renderHTML: () => ["hr", { "data-slide": "", class: "slide-break" }],
+  addKeyboardShortcuts() {
+    // Ctrl/Cmd + Enter starts a new slide
+    return { "Mod-Enter": () => this.editor.commands.insertContent([{ type: "slideBreak" }, { type: "paragraph" }]) };
+  },
+});
+
 export const poemExtensions = [
   StarterKit.configure({
     heading: { levels: [1, 2, 3] },
@@ -43,4 +57,5 @@ export const poemExtensions = [
   FontSize,
   PoemTab,
   LineVoice,
+  SlideBreak,
 ];

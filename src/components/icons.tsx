@@ -131,6 +131,13 @@ export const PlayIcon = (p: P) => (
     <path d="M7 4.5v15l13-7.5-13-7.5Z" />
   </Svg>
 );
+/** Flow: a play button inside a tall card (the full-screen swipe feed). */
+export const FlowIcon = (p: P) => (
+  <Svg {...p} filled={false} strokeWidth={p.filled ? 2.4 : 1.8}>
+    <rect x="5" y="2.5" width="14" height="19" rx="3" />
+    <path d="M10 9v6l5-3-5-3Z" fill={p.filled ? "currentColor" : "none"} />
+  </Svg>
+);
 export const CalendarIcon = (p: P) => (
   <Svg {...p} filled={false}>
     <rect x="3.5" y="5" width="17" height="15.5" rx="2" />

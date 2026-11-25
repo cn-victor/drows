@@ -1,4 +1,4 @@
-// What a poem is made of, plus the safety checks and the HTML printer used to show it.
+// What a poem is made of, plus the safety checks and the HTML printers used to show it.
 import { AMBIENTS, getTheme, type Ambient } from "./themes";
 import { FONTS, FONT_CSS, TEXT_SIZE_VALUES } from "./fonts";
 import { CUE_IDS, SCAPE_IDS, UPLOAD_ID, type Music, type ScapeId } from "./sounds";
@@ -14,6 +14,7 @@ export type PoemStyle = {
   voice: string; // AI reader voice
   reading: string; // overall reading style
   music: Music; // background sound
+  layout: "page" | "slides"; // one page, or slides readers swipe through
 };
 
 export type DocNode = {
@@ -43,6 +44,7 @@ export type Poem = {
   reposts: number;
   comments: number;
   gifts: number;
+  authorHasWallet?: boolean; // can receive gifts
   liked: boolean; // by the person looking at it
   reposted: boolean;
   repostedBy?: { username: string; name: string } | null; // when it shows in a feed because someone reposted it
@@ -63,12 +65,13 @@ export function defaultStyle(themeId = "parchment"): PoemStyle {
     voice: "sage",
     reading: "gentle",
     music: { kind: "none", volume: 0.5 },
+    layout: "page",
   };
 }
 
 export const LIMITS = { title: 120, author: 60, docBytes: 200_000 };
 
-const BLOCKS = new Set(["paragraph", "heading", "blockquote", "horizontalRule"]);
+const BLOCKS = new Set(["paragraph", "heading", "blockquote", "horizontalRule", "slideBreak"]);
 const INLINE = new Set(["text", "hardBreak"]);
 const SIMPLE_MARKS = new Set(["bold", "italic", "underline", "strike"]);
 const ALIGNS = new Set(["left", "center", "right", "justify"]);
@@ -120,6 +123,7 @@ function cleanBlocks(nodes: unknown, depth = 0): DocNode[] {
   for (const n of nodes as DocNode[]) {
     if (!n || !BLOCKS.has(n.type)) continue;
     if (n.type === "horizontalRule") out.push({ type: "horizontalRule" });
+    else if (n.type === "slideBreak") { if (depth === 0) out.push({ type: "slideBreak" }); }
     else if (n.type === "blockquote") {
       if (depth < 2) out.push({ type: "blockquote", content: cleanBlocks(n.content, depth + 1) });
     } else if (n.type === "heading") {
@@ -161,6 +165,7 @@ export function cleanStyle(s: unknown): PoemStyle {
     voice: typeof v.voice === "string" && VOICE_IDS.has(v.voice) ? v.voice : base.voice,
     reading: typeof v.reading === "string" && READING_IDS.has(v.reading) ? v.reading : base.reading,
     music: cleanMusic(v.music),
+    layout: v.layout === "slides" ? "slides" : "page",
   };
 }
 
@@ -201,6 +206,7 @@ function renderBlock(n: DocNode, index?: number): string {
   const at = lineAttrs(n, index);
   switch (n.type) {
     case "horizontalRule": return `<hr${index !== undefined ? ` data-i="${index}"` : ""}>`;
+    case "slideBreak": return ""; // only marks where a new slide starts
     case "blockquote": return `<blockquote${index !== undefined ? ` data-i="${index}"` : ""}>${(n.content ?? []).map((c) => renderBlock(c)).join("")}</blockquote>`;
     case "heading": return `<h${n.attrs?.level}${at}>${inner || "<br>"}</h${n.attrs?.level}>`;
     default: return `<p${at}>${inner || "<br>"}</p>`;
@@ -233,4 +239,31 @@ export function excerpt(doc: DocNode, lines = 4): string[] {
 
 export function hasWords(doc: DocNode): boolean {
   return excerpt(doc, 1).length > 0;
+}
+
+/** The poem split into slides (each a list of [line index, block]). One slide when the layout is "page".
+ *  In slides layout the writer's "New slide" breaks decide the slides; with none, each stanza is a slide. */
+export function slideBlocks(doc: DocNode, style: PoemStyle): [number, DocNode][][] {
+  const blocks = (doc.content ?? []).map((b, i) => [i, b] as [number, DocNode]);
+  if (style.layout !== "slides") return [blocks.filter(([, b]) => b.type !== "slideBreak")];
+  const hasBreaks = blocks.some(([, b]) => b.type === "slideBreak");
+  const slides: [number, DocNode][][] = [[]];
+  const isGap = (b: DocNode) => (b.type === "paragraph" && !lineText(b).trim()) || b.type === "horizontalRule";
+  for (const [i, b] of blocks) {
+    const cut = hasBreaks ? b.type === "slideBreak" : isGap(b);
+    if (cut) {
+      if (slides[slides.length - 1].length) slides.push([]);
+      continue;
+    }
+    slides[slides.length - 1].push([i, b]);
+  }
+  const out = slides.filter((s) => s.some(([, b]) => lineText(b).trim() || b.type === "horizontalRule"));
+  // Very long poems: keep it to 20 slides by joining the rest onto the last one.
+  while (out.length > 20) out[19].push(...out.splice(20, 1)[0]);
+  return out.length ? out : [blocks];
+}
+
+/** HTML for each slide (line numbers are kept, so the reader can highlight across slides). */
+export function renderSlides(doc: DocNode, style: PoemStyle): string[] {
+  return slideBlocks(doc, style).map((slide) => slide.map(([i, b]) => renderBlock(b, i)).join(""));
 }

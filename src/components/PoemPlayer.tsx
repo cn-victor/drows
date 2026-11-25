@@ -5,7 +5,18 @@ import type { Segment } from "@/lib/segments";
 import { SOUNDSCAPES, type Music } from "@/lib/sounds";
 
 /** The "Listen" button on a published poem: music + AI reader, highlighting each line as it's read. */
-export default function PoemPlayer({ poemId, segments, music, align }: { poemId: string; segments: Segment[]; music: Music; align: string }) {
+type Props = {
+  poemId: string;
+  segments: Segment[];
+  music: Music;
+  align: string;
+  /** Where the poem's lines are (for highlighting). Defaults to the page's poem. */
+  rootSelector?: string;
+  /** When this turns false (e.g. the reader swiped away), any sound stops. */
+  active?: boolean;
+};
+
+export default function PoemPlayer({ poemId, segments, music, align, rootSelector = "[data-poem]", active = true }: Props) {
   const [mode, setMode] = useState<"idle" | "reading" | "music">("idle");
   const [voice, setVoice] = useState<"ai" | "browser" | null>(null);
   const reader = useRef<ReturnType<typeof createReader> | null>(null);
@@ -19,13 +30,18 @@ export default function PoemPlayer({ poemId, segments, music, align }: { poemId:
     setMode("idle");
   };
   useEffect(() => () => stopAll(), []); // stop sound when leaving the page
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (!active) stopAll();
+  }, [active]);
 
   const highlight = (blocks: number[] | null) => {
-    const root = document.querySelector("[data-poem]");
+    const root = document.querySelector(rootSelector);
     root?.querySelectorAll(".reading-now").forEach((el) => el.classList.remove("reading-now"));
     blocks?.forEach((i) => root?.querySelector(`[data-i="${i}"]`)?.classList.add("reading-now"));
     const first = blocks?.length ? root?.querySelector(`[data-i="${blocks[0]}"]`) : null;
-    first?.scrollIntoView({ behavior: "smooth", block: "center" });
+    // "nearest" keeps the swipe feed still; on slides this brings the right slide into view
+    first?.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
   };
 
   function listen() {

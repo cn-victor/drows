@@ -5,13 +5,14 @@ import { BookIcon, RepostIcon } from "./icons";
 import PoemActions from "./PoemActions";
 import PoemCanvas from "./PoemCanvas";
 import TimeAgo from "./TimeAgo";
-import { excerpt, type Poem } from "@/lib/poem";
+import { excerpt, slideBlocks, type Poem } from "@/lib/poem";
 import { SOUNDSCAPES } from "@/lib/sounds";
 
 /** The poem's first lines on its own theme, like the picture in a post. */
 export function PoemPreview({ poem: p, lines = 6 }: { poem: Poem; lines?: number }) {
   const text = excerpt(p.doc, lines);
   const m = p.style.music;
+  const slides = p.style.layout === "slides" ? slideBlocks(p.doc, p.style).length : 1;
   const music = m.kind === "scape" ? SOUNDSCAPES.find((s) => s.id === m.id)?.label : m.kind === "upload" ? m.name : null;
   return (
     <PoemCanvas style={{ ...p.style, ambient: "none" }} className="overflow-hidden rounded-2xl border border-line">
@@ -23,7 +24,7 @@ export function PoemPreview({ poem: p, lines = 6 }: { poem: Poem; lines?: number
           ))}
         </div>
         <p className="mt-3 text-xs font-medium" style={{ color: "var(--poem-muted)", fontFamily: "var(--font-modern)" }}>
-          Read{music ? ` · ♫ ${music}` : ""} · ▶ Listen
+          {slides > 1 ? `⧉ ${slides} slides` : "Read"}{music ? ` · ♫ ${music}` : ""} · ▶ Listen
         </p>
       </div>
     </PoemCanvas>

@@ -1,4 +1,5 @@
 import "server-only";
+// (Keeps line settings, slide breaks and the page/slides layout.)
 import { cleanDoc, cleanStyle, hasWords, LIMITS } from "@/lib/poem";
 import type { PoemInput } from "./poems";
 

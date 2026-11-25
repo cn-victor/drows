@@ -18,6 +18,8 @@ type Props = {
   giftCount: number;
   /** Open the gift window straight away (used when someone taps 🎁 in a feed). */
   autoOpen?: boolean;
+  /** "rail" = big round button with the count underneath (the swipe viewer). */
+  variant?: "inline" | "rail";
 };
 
 /** 🎁 on a poem: readers send the writer money (85% to the writer, 15% to the platform). */
@@ -38,8 +40,19 @@ export default function GiftButton(p: Props) {
           setOpen(true);
         }}
       >
-        <span className="-m-2 rounded-full p-2 transition group-hover:bg-amber-400/15"><GiftIcon size={22} /></span>
-        <span className="min-w-[1ch] text-sm">{p.giftCount > 0 ? p.giftCount : ""}</span>
+        {p.variant === "rail" ? (
+          <span className="flex flex-col items-center gap-1">
+            <span className="grid h-12 w-12 place-items-center rounded-full bg-black/40 text-white backdrop-blur transition group-hover:bg-amber-400/30 group-hover:text-amber-300 sm:bg-soft sm:text-fg">
+              <GiftIcon size={26} />
+            </span>
+            <span className="text-xs font-semibold text-white drop-shadow sm:text-fg sm:drop-shadow-none">{p.giftCount > 0 ? p.giftCount : "Gift"}</span>
+          </span>
+        ) : (
+          <>
+            <span className="-m-2 rounded-full p-2 transition group-hover:bg-amber-400/15"><GiftIcon size={22} /></span>
+            <span className="min-w-[1ch] text-sm">{p.giftCount > 0 ? p.giftCount : ""}</span>
+          </>
+        )}
       </button>
       {open && p.viewer && <GiftDialog {...p} viewer={p.viewer} onClose={() => setOpen(false)} />}
     </>

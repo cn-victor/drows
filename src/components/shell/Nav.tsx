@@ -3,7 +3,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import Avatar from "../Avatar";
-import { BookIcon, DrowsMark, GearIcon, HomeIcon, MoonIcon, QuillIcon, SearchIcon, SunIcon, UserIcon, WalletIcon } from "../icons";
+import { BookIcon, DrowsMark, FlowIcon, GearIcon, HomeIcon, MoonIcon, QuillIcon, SearchIcon, SunIcon, UserIcon, WalletIcon } from "../icons";
 import { SITE_NAME } from "@/lib/site";
 
 type Me = { username: string; name: string } | null;
@@ -11,6 +11,7 @@ type Me = { username: string; name: string } | null;
 function useNavItems(me: Me) {
   const items = [
     { href: "/", label: "Home", Icon: HomeIcon },
+    { href: "/flow", label: "Flow", Icon: FlowIcon },
     { href: "/explore", label: "Explore", Icon: SearchIcon },
     { href: "/books", label: "Books", Icon: BookIcon },
   ];
@@ -111,10 +112,10 @@ export function SideNav({ me }: { me: Me }) {
 /** The bottom bar on phones, plus the round Write button. */
 export function BottomNav({ me }: { me: Me }) {
   const path = usePathname();
-  const items = useNavItems(me).filter((i) => i.label !== "Settings");
+  const items = useNavItems(me).filter((i) => i.label !== "Settings" && i.label !== "Books");
   return (
     <>
-      {me && (
+      {me && !path.startsWith("/p/") && path !== "/flow" && (
         <Link
           href="/write"
           className="fixed bottom-20 right-4 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-accent text-on-accent shadow-lg sm:hidden"

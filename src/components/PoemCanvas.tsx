@@ -26,7 +26,7 @@ export default function PoemCanvas({ style, children, className = "" }: { style:
   return (
     <div className={`relative isolate overflow-clip ${className}`} style={poemVars(style)}>
       <Ambient kind={style.ambient} />
-      <div className="relative">{children}</div>
+      <div className="relative h-full">{children}</div>
     </div>
   );
 }

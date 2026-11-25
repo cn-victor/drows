@@ -14,6 +14,41 @@ export default function LookPanel({ style, onChange }: { style: PoemStyle; onCha
   return (
     <div className="flex flex-col gap-6">
       <section className="flex flex-col gap-2">
+        <h2 className={label}>Layout</h2>
+        <div className="grid grid-cols-2 gap-2">
+          {([
+            ["page", "Single page", "The whole poem on one screen"],
+            ["slides", "Slides", "Readers swipe through it, like photos"],
+          ] as const).map(([id, name, hint]) => (
+            <button
+              key={id}
+              onClick={() => onChange({ ...style, layout: id })}
+              className={`flex flex-col items-start gap-2 rounded-xl p-3 text-left ring-1 transition ${style.layout === id ? "ring-2 ring-accent" : "ring-line hover:bg-hover"}`}
+            >
+              <span className="flex h-10 items-end gap-1" aria-hidden>
+                {id === "page" ? (
+                  <span className="h-10 w-7 rounded-sm bg-fg/70" />
+                ) : (
+                  <>
+                    <span className="h-10 w-7 rounded-sm bg-fg/70" />
+                    <span className="h-8 w-6 rounded-sm bg-fg/40" />
+                    <span className="h-6 w-5 rounded-sm bg-fg/20" />
+                  </>
+                )}
+              </span>
+              <span className="text-sm font-bold">{name}</span>
+              <span className="text-xs text-muted">{hint}</span>
+            </button>
+          ))}
+        </div>
+        {style.layout === "slides" && (
+          <p className="text-xs leading-relaxed text-muted">
+            Press <b>⧉ New slide</b> in the toolbar (or Ctrl + Enter) where each slide should start. With no slide breaks, each stanza becomes a slide.
+          </p>
+        )}
+      </section>
+
+      <section className="flex flex-col gap-2">
         <h2 className={label}>Theme</h2>
         <div className="grid grid-cols-2 gap-2">
           {THEMES.map((t) => (

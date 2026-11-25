@@ -26,6 +26,7 @@ export function buildSegments(doc: DocNode): Segment[] {
 
   (doc.content ?? []).forEach((block, i) => {
     if (block.type === "horizontalRule") return close(1.5);
+    if (block.type === "slideBreak") return close(1.2);
     const text = lineText(block).trim();
     if (!text) return close(STANZA_PAUSE);
 

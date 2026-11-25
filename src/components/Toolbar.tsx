@@ -106,6 +106,13 @@ export default function Toolbar({ editor, themeId }: { editor: Editor; themeId: 
       </div>
       <Sep />
       <button className={btn} title="Stanza divider" onClick={() => c().setHorizontalRule().run()}>✦</button>
+      <button
+        className={`${btn} gap-1 px-2.5 text-xs font-semibold`}
+        title="Start a new slide here (Ctrl + Enter). Used when the poem's layout is Slides."
+        onClick={() => c().insertContent([{ type: "slideBreak" }, { type: "paragraph" }]).run()}
+      >
+        ⧉ New slide
+      </button>
       <button className={btn} title="Remove formatting from selected words" onClick={() => c().unsetAllMarks().unsetTextAlign().run()}>⌫</button>
     </div>
   );

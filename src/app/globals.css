@@ -147,3 +147,26 @@ body {
 @media (max-width: 1279px) {
   .poem-body .ProseMirror [data-tone]::before { display: none; }
 }
+
+/* ---------- Slide breaks in the editor ---------- */
+.poem-body .ProseMirror hr.slide-break {
+  border: 0;
+  height: auto;
+  margin: 1.2em 0;
+  width: 100%;
+  background: none;
+  overflow: visible;
+  text-align: center;
+}
+.poem-body .ProseMirror hr.slide-break::after {
+  content: "⧉  new slide";
+  display: block;
+  margin: 0;
+  padding: 0.35em 0;
+  border-top: 2px dashed color-mix(in srgb, var(--poem-accent) 70%, transparent);
+  font: 600 11px/1.6 var(--font-modern), sans-serif;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--poem-muted);
+}
+.poem-body .ProseMirror hr.slide-break.ProseMirror-selectednode::after { color: var(--poem-accent); }
