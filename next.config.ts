@@ -6,6 +6,9 @@ const nextConfig: NextConfig = {
   cacheComponents: true,
   partialPrefetching: true,
   serverExternalPackages: ["@libsql/client"],
+  // Lets a phone on the same Wi-Fi (e.g. http://192.168.1.7:3300) use the dev server fully.
+  // Without this the page shows but its buttons never switch on. Only affects `npm run dev`.
+  allowedDevOrigins: ["192.168.*.*", "10.*.*.*", "172.*.*.*"],
   // Flow is now the home page.
   async redirects() {
     return [{ source: "/flow", destination: "/", permanent: false }];

@@ -47,7 +47,7 @@ export function PoemPreview({ poem: p, lines = 6 }: { poem: Poem; lines?: number
 export default function PoemPost({ poem: p, viewerId }: { poem: Poem; viewerId: string | null }) {
   const href = `/p/${p.id}`;
   return (
-    <article className="relative border-b border-line px-4 pb-2 pt-3 transition hover:bg-hover/40">
+    <article className="relative border-b border-line px-4 pb-3 pt-3 transition hover:bg-hover/40">
       {p.repostedBy && (
         <p className="mb-1 ml-8 flex items-center gap-2 text-[13px] font-bold text-muted">
           <RepostIcon size={15} />
