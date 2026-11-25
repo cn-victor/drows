@@ -108,49 +108,54 @@ export function SideNav({ me }: { me: Me }) {
   );
 }
 
-/** The bottom bar on phones. Signed in: Home, Explore, ＋ Write, Wallet, Profile (books are in Explore). */
+/** Phones: a floating rounded bar (like X) with the current page in a soft pill,
+ *  plus a round Write button above it on the right. */
 export function BottomNav({ me }: { me: Me }) {
   const path = usePathname();
   const all = useNavItems(me);
   const pick = (label: string) => all.find((i) => i.label === label)!;
-  const left = me ? [pick("Home"), pick("Explore")] : [pick("Home"), pick("Explore"), pick("Books")];
-  const right = me ? [pick("Wallet"), pick("Profile")] : [];
-  const tab = ({ href, label, Icon }: (typeof all)[number]) => (
-    <Link key={href} href={href} aria-label={label} className="flex h-full flex-1 items-center justify-center">
-      <Icon size={26} filled={isActive(path, href)} />
+  const items = me
+    ? [pick("Home"), pick("Explore"), pick("Books"), pick("Wallet"), pick("Profile")]
+    : [pick("Home"), pick("Explore"), pick("Books")];
+  const cell = (href: string, label: string, on: boolean, icon: React.ReactNode) => (
+    <Link key={href} href={href} aria-label={label} aria-current={on ? "page" : undefined} className="flex flex-1 items-center justify-center">
+      <span className={`flex h-11 w-14 items-center justify-center rounded-full transition ${on ? "bg-hover" : ""}`}>{icon}</span>
     </Link>
   );
   return (
     <>
-      <nav className="fixed inset-x-0 bottom-0 z-40 flex h-14 items-center justify-around border-t border-line bg-bg/90 backdrop-blur sm:hidden">
-        {left.map(tab)}
-        {me && (
-          <Link href="/write" aria-label="Write" className="flex h-full flex-1 items-center justify-center">
-            <span className="flex h-9 w-12 items-center justify-center rounded-xl bg-accent text-2xl font-bold leading-none text-on-accent">+</span>
-          </Link>
-        )}
-        {right.map(tab)}
-        {!me && (
-          <Link href="/login" className="flex h-full flex-1 items-center justify-center" aria-label="Log in">
-            <UserIcon size={26} />
-          </Link>
-        )}
+      {me && path !== "/write" && (
+        <Link
+          href="/write"
+          aria-label="Write a poem"
+          className="fixed bottom-[5.75rem] right-4 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-fg text-bg shadow-[0_6px_24px_rgba(0,0,0,0.35)] transition active:scale-95 sm:hidden"
+        >
+          <QuillIcon size={24} />
+        </Link>
+      )}
+      <nav className="fixed inset-x-3 bottom-3 z-40 flex h-16 items-center rounded-full bg-bg/80 px-2 shadow-[0_8px_30px_rgba(0,0,0,0.35)] ring-1 ring-line backdrop-blur-xl sm:hidden">
+        {items.map(({ href, label, Icon }) => cell(href, label, isActive(path, href), <Icon size={26} filled={isActive(path, href)} />))}
+        {!me && cell("/login", "Log in", path === "/login", <UserIcon size={26} filled={path === "/login"} />)}
       </nav>
     </>
   );
 }
 
-/** The top bar on phones (logo and your picture). */
+/** Phones: the top bar, like X — your picture on the left, the Drows mark in the middle. */
 export function MobileTop({ me }: { me: Me }) {
   return (
-    <div className="flex h-12 items-center justify-between px-4 sm:hidden">
+    <div className="relative flex h-14 items-center justify-between px-4 sm:hidden">
       {me ? (
-        <Link href={`/u/${me.username}`} aria-label="Your profile"><Avatar name={me.name} username={me.username} size={32} /></Link>
+        <Link href={`/u/${me.username}`} aria-label="Your profile"><Avatar name={me.name} username={me.username} size={34} /></Link>
       ) : (
-        <span className="w-8" />
+        <span className="w-9" />
       )}
-      <Link href="/" aria-label={SITE_NAME}><DrowsMark size={28} /></Link>
-      <ThemeToggle compact />
+      <Link href="/" aria-label={SITE_NAME} className="absolute left-1/2 -translate-x-1/2"><DrowsMark size={30} /></Link>
+      {me ? (
+        <span className="w-9" />
+      ) : (
+        <Link href="/login" className="rounded-full px-3 py-1.5 text-sm font-bold ring-1 ring-line">Log in</Link>
+      )}
     </div>
   );
 }

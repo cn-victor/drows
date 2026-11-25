@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
+import DisplaySetting from "@/components/DisplaySetting";
 import SettingsForm from "@/components/SettingsForm";
 import AppShell from "@/components/shell/AppShell";
 import { logout } from "@/app/actions";
@@ -17,6 +18,9 @@ async function Body() {
         Signed in as <Link href={`/u/${me.username}`} className="font-medium text-ink underline">@{me.username}</Link> · {me.email}
       </p>
       <SettingsForm name={me.name} bio={me.bio} />
+      <div className="mt-10 border-t border-line pt-6">
+        <DisplaySetting />
+      </div>
       <form action={logout} className="mt-12 border-t border-line pt-6">
         <button className="rounded-full px-5 py-2 text-sm ring-1 ring-line hover:bg-hover">Log out</button>
       </form>

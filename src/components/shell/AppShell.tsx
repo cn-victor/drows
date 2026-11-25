@@ -18,7 +18,7 @@ export default function AppShell({ children, wide = false }: { children: ReactNo
           <Side />
         </Suspense>
       </header>
-      <main className={`min-h-screen w-full min-w-0 border-line pb-20 sm:border-x sm:pb-0 ${wide ? "max-w-[920px]" : "max-w-[600px]"}`}>
+      <main className={`min-h-screen w-full min-w-0 border-line pb-28 sm:border-x sm:pb-0 ${wide ? "max-w-[920px]" : "max-w-[600px]"}`}>
         <Suspense fallback={<div className="h-12 sm:hidden" />}>
           <Top />
         </Suspense>
