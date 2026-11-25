@@ -7,6 +7,8 @@ import SearchBox from "./SearchBox";
 import { SITE_NAME } from "@/lib/site";
 import { currentUser } from "@/server/auth";
 import { latestBooks } from "@/server/books";
+import { unreadConversations } from "@/server/messages";
+import { unreadNotifications } from "@/server/notify";
 import { suggestedWriters } from "@/server/social";
 
 /** Every page's frame: menu on the left, the page in the middle, extras on the right. */
@@ -44,7 +46,9 @@ export default function AppShell({ children, wide = false }: { children: ReactNo
 
 const meLite = async () => {
   const me = await currentUser();
-  return me ? { username: me.username, name: me.name } : null;
+  if (!me) return null;
+  const [alerts, inbox] = await Promise.all([unreadNotifications(me.id), unreadConversations(me.id)]);
+  return { username: me.username, name: me.name, alerts, inbox };
 };
 
 async function Side() {

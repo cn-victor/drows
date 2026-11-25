@@ -1,9 +1,9 @@
 "use client";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState, useTransition, type ReactNode } from "react";
-import { CommentIcon, GiftIcon, HeartIcon, RepostIcon, ShareIcon } from "./icons";
-import { setLike, setRepost } from "@/app/actions";
+import { useEffect, useRef, useState, useTransition, type ReactNode } from "react";
+import { BookmarkIcon, CommentIcon, GiftIcon, HeartIcon, RepostIcon, ShareFatIcon, ShareIcon } from "./icons";
+import { setLike, setRepost, setSaved } from "@/app/actions";
 
 type Props = {
   poemId: string;
@@ -13,6 +13,7 @@ type Props = {
   gifts: number;
   liked: boolean;
   reposted: boolean;
+  saved?: boolean;
   isOwner: boolean;
   loggedIn: boolean;
   /** On the poem's own page the gift button is a separate component; in feeds it links to the poem. */
@@ -22,13 +23,30 @@ type Props = {
 
 const fmt = (n: number) => (n >= 1000 ? `${(n / 1000).toFixed(n >= 10000 ? 0 : 1)}K` : n > 0 ? String(n) : "");
 
-/** The row of 💬 ↻ ♥ 🎁 ↑ buttons under a poem. Likes and reposts update instantly, then save. */
+/** The row of 💬 ♥ 🎁 🔖 ↗ buttons under a poem (repost lives in the share menu).
+ *  Likes, saves and reposts update instantly, then save. */
 export default function PoemActions(p: Props) {
   const router = useRouter();
   const [liked, setLiked] = useState(p.liked);
   const [reposted, setReposted] = useState(p.reposted);
   const [likes, setLikes] = useState(p.likes);
   const [reposts, setReposts] = useState(p.reposts);
+  const [saved, setSavedState] = useState(!!p.saved);
+  const [menu, setMenu] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!menu) return;
+    const close = (e: Event) => {
+      if (!menuRef.current?.contains(e.target as Node)) setMenu(false);
+    };
+    const esc = (e: KeyboardEvent) => e.key === "Escape" && setMenu(false);
+    document.addEventListener("pointerdown", close);
+    document.addEventListener("keydown", esc);
+    return () => {
+      document.removeEventListener("pointerdown", close);
+      document.removeEventListener("keydown", esc);
+    };
+  }, [menu]);
   const [note, setNote] = useState("");
   const [, start] = useTransition();
 
@@ -62,18 +80,41 @@ export default function PoemActions(p: Props) {
     });
   };
 
-  async function share(e: React.MouseEvent) {
+  const save = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    const url = `${location.origin}/p/${p.poemId}`;
-    if (navigator.share) {
-      try {
-        return await navigator.share({ url });
-      } catch {}
-    }
-    await navigator.clipboard.writeText(url);
+    if (!p.loggedIn) return router.push(`/login?next=${encodeURIComponent(location.pathname)}`);
+    const on = !saved;
+    setSavedState(on);
+    flash(on ? "Saved" : "Removed from Saved");
+    start(async () => {
+      const r = await setSaved(p.poemId, on);
+      if (r.error) {
+        setSavedState(!on);
+        flash(r.error === "login" ? "Please log in" : r.error);
+      }
+    });
+  };
+
+  const stop = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+  const link = () => `${location.origin}/p/${p.poemId}`;
+  async function copy(e: React.MouseEvent) {
+    stop(e);
+    setMenu(false);
+    await navigator.clipboard.writeText(link());
     flash("Link copied");
   }
+  async function shareOut(e: React.MouseEvent) {
+    stop(e);
+    setMenu(false);
+    try {
+      await navigator.share({ url: link() });
+    } catch {}
+  }
+  const canShare = typeof navigator !== "undefined" && !!navigator.share;
 
   const icon = p.big ? 22 : 18.75;
   const text = p.big ? "text-sm" : "text-[13px]";
@@ -81,9 +122,6 @@ export default function PoemActions(p: Props) {
     <div className={`relative flex items-center justify-between ${p.big ? "px-2 py-1" : "max-w-[440px] pr-2"}`}>
       <Btn text={text} href={`/p/${p.poemId}#comments`} label="Comments" count={p.comments} color="group-hover:bg-accent/15 text-accent hover:text-accent">
         <CommentIcon size={icon} />
-      </Btn>
-      <Btn text={text} onClick={act("repost")} label={reposted ? "Undo repost" : "Repost"} count={reposts} active={reposted} color="group-hover:bg-emerald-500/15 text-emerald-500 hover:text-emerald-500">
-        <RepostIcon size={icon} filled={reposted} />
       </Btn>
       <Btn text={text} onClick={act("like")} label={liked ? "Unlike" : "Like"} count={likes} active={liked} color="group-hover:bg-pink-500/15 text-pink-500 hover:text-pink-500">
         <HeartIcon size={icon} filled={liked} />
@@ -93,11 +131,34 @@ export default function PoemActions(p: Props) {
           <GiftIcon size={icon} />
         </Btn>
       )}
-      <Btn text={text} onClick={share} label="Share" color="group-hover:bg-accent/15 text-accent hover:text-accent">
-        <ShareIcon size={icon} />
+      <Btn text={text} onClick={save} label={saved ? "Remove from Saved" : "Save"} active={saved} color="group-hover:bg-accent/15 text-accent hover:text-accent">
+        <BookmarkIcon size={icon} filled={saved} />
       </Btn>
+      <div ref={menuRef} className="relative">
+        <Btn text={text} onClick={(e) => { stop(e); setMenu((m) => !m); }} label="Share" active={reposted} color="group-hover:bg-emerald-500/15 text-emerald-500 hover:text-emerald-500">
+          <ShareFatIcon size={icon} />
+        </Btn>
+        {menu && (
+          <div role="menu" className="absolute bottom-full right-0 z-30 mb-2 w-56 overflow-hidden rounded-2xl bg-bg py-1 text-[15px] shadow-[0_0_18px_rgba(0,0,0,0.25)] ring-1 ring-line">
+            <MenuItem onClick={(e) => { act("repost")(e); setMenu(false); }} icon={<RepostIcon size={18} />}>
+              {reposted ? "Undo repost" : "Repost"}{reposts > 0 && <span className="ml-auto text-sm text-muted">{fmt(reposts)}</span>}
+            </MenuItem>
+            <MenuItem onClick={copy} icon={<ShareFatIcon size={18} />}>Copy link</MenuItem>
+            {canShare && <MenuItem onClick={shareOut} icon={<ShareIcon size={18} />}>Share via…</MenuItem>}
+          </div>
+        )}
+      </div>
       {note && <span className="absolute left-1/2 top-full z-20 mt-1 -translate-x-1/2 whitespace-nowrap rounded-md bg-accent px-3 py-1.5 text-xs font-medium text-on-accent">{note}</span>}
     </div>
+  );
+}
+
+function MenuItem({ onClick, icon, children }: { onClick: (e: React.MouseEvent) => void; icon: ReactNode; children: ReactNode }) {
+  return (
+    <button role="menuitem" onClick={onClick} className="flex w-full items-center gap-3 px-4 py-3 text-left font-bold hover:bg-hover">
+      {icon}
+      {children}
+    </button>
   );
 }
 

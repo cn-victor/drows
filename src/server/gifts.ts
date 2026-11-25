@@ -8,6 +8,7 @@ import { createPublicKey, verify } from "node:crypto";
 import { CUSTOM_MEMO_PREFIX } from "@/lib/giftMemo";
 import { GIFT_MAX, GIFT_MIN, isAddress, RPC_URL, splitGift, toUnits, USDC_MINT, walletProofMessage, type Currency } from "@/lib/chain";
 import { all, newId, one, run } from "./db";
+import { notify } from "./notify";
 
 const MEMO_PROGRAM = "MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr";
 
@@ -124,6 +125,8 @@ export async function confirmGift(fromUserId: string, giftId: string, signature:
 
   const sender = tx.transaction.message.accountKeys.find((k) => k.signer)?.pubkey.toBase58() ?? null;
   await run("UPDATE gifts SET status = 'confirmed', signature = ?, sender_address = ?, confirmed_at = ? WHERE id = ?", [signature, sender, Date.now(), giftId]);
+  const amount = Number(BigInt(String(g.total_units))) / (currency === "SOL" ? 1e9 : 1e6);
+  await notify(String(g.to_user_id), fromUserId, "gift", String(g.poem_id), giftId, `${amount} ${currency}${g.message ? ` · ${g.message}` : ""}`);
   return null;
 }
 

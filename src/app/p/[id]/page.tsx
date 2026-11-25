@@ -145,6 +145,7 @@ async function PoemView({ params, searchParams }: { params: PageProps<"/p/[id]">
             gifts={poem.gifts}
             liked={poem.liked}
             reposted={poem.reposted}
+            saved={poem.saved}
             isOwner={isOwner}
             loggedIn={!!me}
             giftSlot={

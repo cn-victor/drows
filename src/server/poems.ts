@@ -11,7 +11,8 @@ const SELECT = `
     (SELECT COUNT(*) FROM comments WHERE poem_id = p.id) AS comment_count,
     (SELECT COUNT(*) FROM gifts WHERE poem_id = p.id AND status = 'confirmed') AS gift_count,
     EXISTS (SELECT 1 FROM likes WHERE poem_id = p.id AND user_id = :viewer) AS liked,
-    EXISTS (SELECT 1 FROM reposts WHERE poem_id = p.id AND user_id = :viewer) AS reposted
+    EXISTS (SELECT 1 FROM reposts WHERE poem_id = p.id AND user_id = :viewer) AS reposted,
+    EXISTS (SELECT 1 FROM bookmarks WHERE poem_id = p.id AND user_id = :viewer) AS saved
   FROM poems p
   LEFT JOIN users u ON u.id = p.author_id
   LEFT JOIN books b ON b.id = p.book_id`;
@@ -37,6 +38,7 @@ function toPoem(r: Row): Poem {
     authorHasWallet: !!r.author_wallet,
     liked: !!Number(r.liked ?? 0),
     reposted: !!Number(r.reposted ?? 0),
+    saved: !!Number(r.saved ?? 0),
   };
 }
 
@@ -136,7 +138,7 @@ export async function updatePoem(id: string, authorId: string, p: PoemInput): Pr
 export async function deletePoem(id: string, authorId: string): Promise<boolean> {
   const n = await run("DELETE FROM poems WHERE id = ? AND author_id = ?", [id, authorId]);
   if (n) {
-    for (const t of ["likes", "reposts", "comments"]) await run(`DELETE FROM ${t} WHERE poem_id = ?`, [id]);
+    for (const t of ["likes", "reposts", "comments", "bookmarks", "notifications"]) await run(`DELETE FROM ${t} WHERE poem_id = ?`, [id]);
   }
   return n > 0;
 }
@@ -155,4 +157,11 @@ export async function claimPoems(userId: string, name: string, claims: { id: str
 export async function getPoems(ids: string[], viewer?: string | null): Promise<Poem[]> {
   const map = await poemsByIds(ids, v(viewer));
   return ids.flatMap((id) => map.get(id) ?? []);
+}
+
+/** Poems someone saved, newest save first. */
+export async function savedBy(userId: string): Promise<Poem[]> {
+  const rows = await all("SELECT poem_id FROM bookmarks WHERE user_id = ? ORDER BY created_at DESC LIMIT 200", [userId]);
+  const poems = await poemsByIds(rows.map((r) => String(r.poem_id)), userId);
+  return rows.flatMap((r) => poems.get(String(r.poem_id)) ?? []);
 }

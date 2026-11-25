@@ -82,6 +82,7 @@ export default function PoemPost({ poem: p, viewerId }: { poem: Poem; viewerId: 
               gifts={p.gifts}
               liked={p.liked}
               reposted={p.reposted}
+              saved={p.saved}
               isOwner={!!viewerId && viewerId === p.authorId}
               loggedIn={!!viewerId}
             />

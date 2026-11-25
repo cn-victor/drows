@@ -2,6 +2,7 @@
 // Writers can't like or repost their own work: later, likes and reposts decide writers' earnings.
 import "server-only";
 import { all, newId, one, run } from "./db";
+import { notify, unnotify } from "./notify";
 
 async function authorOf(poemId: string): Promise<string | null | undefined> {
   const r = await one("SELECT author_id FROM poems WHERE id = ?", [poemId]);
@@ -13,8 +14,14 @@ export async function toggle(kind: "likes" | "reposts", userId: string, poemId: 
   const author = await authorOf(poemId);
   if (author === undefined) return "This poem no longer exists.";
   if (author === userId) return kind === "likes" ? "You can't like your own poem." : "You can't repost your own poem.";
-  if (on) await run(`INSERT OR IGNORE INTO ${kind} (user_id, poem_id, created_at) VALUES (?, ?, ?)`, [userId, poemId, Date.now()]);
-  else await run(`DELETE FROM ${kind} WHERE user_id = ? AND poem_id = ?`, [userId, poemId]);
+  const note = kind === "likes" ? "like" : "repost";
+  if (on) {
+    const added = await run(`INSERT OR IGNORE INTO ${kind} (user_id, poem_id, created_at) VALUES (?, ?, ?)`, [userId, poemId, Date.now()]);
+    if (added) await notify(author, userId, note, poemId);
+  } else {
+    await run(`DELETE FROM ${kind} WHERE user_id = ? AND poem_id = ?`, [userId, poemId]);
+    await unnotify(author, userId, note, poemId);
+  }
   return on;
 }
 
@@ -40,8 +47,11 @@ export async function commentsOn(poemId: string): Promise<Comment[]> {
 export async function addComment(userId: string, poemId: string, body: string): Promise<string | null> {
   const text = body.trim().slice(0, 1000);
   if (!text) return "Write something first.";
-  if ((await authorOf(poemId)) === undefined) return "This poem no longer exists.";
-  await run("INSERT INTO comments (id, poem_id, user_id, body, created_at) VALUES (?, ?, ?, ?, ?)", [newId(8), poemId, userId, text, Date.now()]);
+  const author = await authorOf(poemId);
+  if (author === undefined) return "This poem no longer exists.";
+  const id = newId(8);
+  await run("INSERT INTO comments (id, poem_id, user_id, body, created_at) VALUES (?, ?, ?, ?, ?)", [id, poemId, userId, text, Date.now()]);
+  await notify(author, userId, "comment", poemId, id, text);
   return null;
 }
 
@@ -56,8 +66,13 @@ export async function deleteComment(userId: string, commentId: string): Promise<
 
 export async function setFollow(userId: string, targetId: string, on: boolean) {
   if (userId === targetId) return;
-  if (on) await run("INSERT OR IGNORE INTO follows (follower_id, followee_id, created_at) VALUES (?, ?, ?)", [userId, targetId, Date.now()]);
-  else await run("DELETE FROM follows WHERE follower_id = ? AND followee_id = ?", [userId, targetId]);
+  if (on) {
+    const added = await run("INSERT OR IGNORE INTO follows (follower_id, followee_id, created_at) VALUES (?, ?, ?)", [userId, targetId, Date.now()]);
+    if (added) await notify(targetId, userId, "follow");
+  } else {
+    await run("DELETE FROM follows WHERE follower_id = ? AND followee_id = ?", [userId, targetId]);
+    await unnotify(targetId, userId, "follow");
+  }
 }
 
 /** Writers to suggest in the sidebar: active writers you don't follow yet. */

@@ -7,6 +7,8 @@ import { createBook, deleteBook, getBook, moveChapter, updateBook } from "@/serv
 import { one } from "@/server/db";
 import { claimPoems } from "@/server/poems";
 import { addComment, deleteComment, setFollow, toggle } from "@/server/social";
+import { markNotificationsRead, setBookmark } from "@/server/notify";
+import { sendMessage } from "@/server/messages";
 import { confirmGift, setWallet, startGift, type GiftOrder } from "@/server/gifts";
 import type { Currency } from "@/lib/chain";
 
@@ -120,6 +122,29 @@ export async function setFollowing(username: string, on: boolean): Promise<{ err
   await setFollow(me.id, String(target.id), on);
   refresh();
   return {};
+}
+
+export async function setSaved(poemId: string, on: boolean): Promise<{ error?: string }> {
+  const me = await currentUser();
+  if (!me) return { error: "login" };
+  const err = await setBookmark(me.id, poemId, on);
+  return err ? { error: err } : {};
+}
+
+export async function readNotifications() {
+  const me = await currentUser();
+  if (me) await markNotificationsRead(me.id);
+}
+
+export async function postMessage(username: string, _: FormState, form: FormData): Promise<FormState> {
+  const me = await currentUser();
+  if (!me) return { error: "Please log in again.", values: keep(form, "body") };
+  const other = await one("SELECT id FROM users WHERE username = ?", [username]);
+  if (!other) return { error: "That person no longer exists." };
+  const err = await sendMessage(me.id, String(other.id), String(form.get("body") || ""));
+  if (err) return { error: err, values: keep(form, "body") };
+  refresh();
+  return { ok: true };
 }
 
 // ---------- books ----------

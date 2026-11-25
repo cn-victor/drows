@@ -107,6 +107,50 @@ const SCHEMA = `
   CREATE INDEX IF NOT EXISTS gifts_to ON gifts (to_user_id, status, created_at DESC);
   CREATE INDEX IF NOT EXISTS gifts_from ON gifts (from_user_id, status, created_at DESC);
   CREATE INDEX IF NOT EXISTS gifts_poem ON gifts (poem_id, status);
+
+  -- Poems a reader saved for later (only they can see this list).
+  CREATE TABLE IF NOT EXISTS bookmarks (
+    user_id TEXT NOT NULL,
+    poem_id TEXT NOT NULL,
+    created_at INTEGER NOT NULL,
+    PRIMARY KEY (user_id, poem_id)
+  );
+  CREATE INDEX IF NOT EXISTS bookmarks_user ON bookmarks (user_id, created_at DESC);
+
+  -- "Someone liked / replied / followed / gifted / reposted." kind = like|repost|comment|follow|gift
+  CREATE TABLE IF NOT EXISTS notifications (
+    id TEXT PRIMARY KEY,
+    user_id TEXT NOT NULL,
+    actor_id TEXT NOT NULL,
+    kind TEXT NOT NULL,
+    poem_id TEXT,
+    ref_id TEXT,
+    body TEXT NOT NULL DEFAULT '',
+    created_at INTEGER NOT NULL,
+    read_at INTEGER
+  );
+  CREATE INDEX IF NOT EXISTS notifications_user ON notifications (user_id, created_at DESC);
+
+  -- Private messages between two people. a_id < b_id so each pair has one conversation.
+  CREATE TABLE IF NOT EXISTS conversations (
+    id TEXT PRIMARY KEY,
+    a_id TEXT NOT NULL,
+    b_id TEXT NOT NULL,
+    last_at INTEGER NOT NULL,
+    a_read_at INTEGER NOT NULL DEFAULT 0,
+    b_read_at INTEGER NOT NULL DEFAULT 0,
+    UNIQUE (a_id, b_id)
+  );
+  CREATE INDEX IF NOT EXISTS conversations_a ON conversations (a_id, last_at DESC);
+  CREATE INDEX IF NOT EXISTS conversations_b ON conversations (b_id, last_at DESC);
+  CREATE TABLE IF NOT EXISTS messages (
+    id TEXT PRIMARY KEY,
+    conversation_id TEXT NOT NULL,
+    sender_id TEXT NOT NULL,
+    body TEXT NOT NULL,
+    created_at INTEGER NOT NULL
+  );
+  CREATE INDEX IF NOT EXISTS messages_conv ON messages (conversation_id, created_at);
 `;
 
 // Columns added after the first version. Each runs once, if the column is missing.

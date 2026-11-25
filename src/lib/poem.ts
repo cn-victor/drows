@@ -47,6 +47,7 @@ export type Poem = {
   authorHasWallet?: boolean; // can receive gifts
   liked: boolean; // by the person looking at it
   reposted: boolean;
+  saved?: boolean; // in the viewer's Saved list
   repostedBy?: { username: string; name: string } | null; // when it shows in a feed because someone reposted it
   feedTime?: number;
 };

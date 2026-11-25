@@ -5,6 +5,7 @@ import { Suspense } from "react";
 import Avatar from "@/components/Avatar";
 import BookRow from "@/components/BookRow";
 import FollowButton from "@/components/FollowButton";
+import { ChatIcon } from "@/components/icons";
 import { CalendarIcon } from "@/components/icons";
 import PersonRow from "@/components/PersonRow";
 import { PoemList } from "@/components/PoemCard";
@@ -47,7 +48,17 @@ async function Profile({ params, searchParams }: { params: PageProps<"/u/[userna
             {isMe ? (
               <Link href="/settings" className="flex h-9 items-center rounded-full px-4 font-bold ring-1 ring-line hover:bg-hover">Edit profile</Link>
             ) : (
-              <FollowButton username={profile.username} following={profile.isFollowing} loggedIn={!!me} />
+              <>
+                <Link
+                  href={me ? `/messages/${profile.username}` : `/login?next=/messages/${profile.username}`}
+                  aria-label={`Message ${profile.name}`}
+                  title="Message"
+                  className="flex h-9 w-9 items-center justify-center rounded-full ring-1 ring-line hover:bg-hover"
+                >
+                  <ChatIcon size={20} />
+                </Link>
+                <FollowButton username={profile.username} following={profile.isFollowing} loggedIn={!!me} />
+              </>
             )}
           </div>
         </div>
