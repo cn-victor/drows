@@ -7,6 +7,7 @@ import { explorerTx, formatAmount, GIFT_MIN, GIFT_PRESETS, IS_TEST_MONEY, PLATFO
 import { explainChainError, getBalances, payGift } from "@/lib/solanaClient";
 import { localWalletAddress } from "@/lib/wallet";
 import { input, Modal, primary, secondary, TestMoneyBadge, useUnlock } from "./ui";
+import { GiftIcon } from "../icons";
 
 type Props = {
   poemId: string;
@@ -15,26 +16,30 @@ type Props = {
   isOwner: boolean;
   viewer: { id: string; walletAddress: string | null } | null;
   giftCount: number;
+  /** Open the gift window straight away (used when someone taps 🎁 in a feed). */
+  autoOpen?: boolean;
 };
 
-/** "🎁 Gift" on a poem: readers send the writer money (85% to the writer, 15% to the platform). */
+/** 🎁 on a poem: readers send the writer money (85% to the writer, 15% to the platform). */
 export default function GiftButton(p: Props) {
   const router = useRouter();
-  const [open, setOpen] = useState(false);
-  const pill = "inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm transition hover:bg-current/10";
+  const [open, setOpen] = useState(!!p.autoOpen && !!p.viewer && !p.isOwner);
+  const cls = "group flex items-center gap-1 text-muted transition hover:text-amber-400";
 
-  if (p.isOwner) {
-    return p.giftCount > 0 ? <span className={pill} style={{ color: "var(--poem-muted)" }}>🎁 {p.giftCount}</span> : null;
-  }
   return (
     <>
       <button
-        className={pill}
-        style={{ color: "var(--poem-muted)" }}
-        title="Send the writer a gift"
-        onClick={() => (p.viewer ? setOpen(true) : router.push(`/login?next=/p/${p.poemId}`))}
+        className={cls}
+        title={p.isOwner ? "Gifts you received for this poem" : "Send the writer a gift"}
+        aria-label="Send a gift"
+        onClick={() => {
+          if (p.isOwner) return router.push("/wallet");
+          if (!p.viewer) return router.push(`/login?next=/p/${p.poemId}`);
+          setOpen(true);
+        }}
       >
-        🎁 {p.giftCount > 0 ? p.giftCount : "Gift"}
+        <span className="-m-2 rounded-full p-2 transition group-hover:bg-amber-400/15"><GiftIcon size={22} /></span>
+        <span className="min-w-[1ch] text-sm">{p.giftCount > 0 ? p.giftCount : ""}</span>
       </button>
       {open && p.viewer && <GiftDialog {...p} viewer={p.viewer} onClose={() => setOpen(false)} />}
     </>
@@ -109,9 +114,9 @@ function GiftDialog({ poemId, writerName, writerHasWallet, viewer, onClose }: Pr
       {IS_TEST_MONEY && <div className="-mt-2 mb-4"><TestMoneyBadge /></div>}
 
       {!writerHasWallet ? (
-        <p className="text-neutral-700">{writerName} hasn&apos;t set up a wallet for gifts yet.</p>
+        <p className="text-fg">{writerName} hasn&apos;t set up a wallet for gifts yet.</p>
       ) : hasLocal === false ? (
-        <div className="flex flex-col gap-3 text-neutral-700">
+        <div className="flex flex-col gap-3 text-fg">
           <p>To send gifts you need a wallet on this browser.</p>
           <Link href="/wallet" className={`${primary} self-start`}>Set up my wallet</Link>
         </div>
@@ -149,8 +154,8 @@ function GiftDialog({ poemId, writerName, writerHasWallet, viewer, onClose }: Pr
             Or choose an amount ({currency})
             <input value={amount} onChange={(e) => setAmount(e.target.value)} inputMode="decimal" className={input} disabled={step === "sending"} />
           </label>
-          {!valid && amount && <p className="-mt-2 text-sm text-red-700">The smallest gift is {GIFT_MIN[currency]} {currency}.</p>}
-          {balance !== null && <p className="-mt-2 text-xs text-neutral-500">In your wallet: {currency === "USDC" ? `$${balance.toFixed(2)}` : `${Number(balance.toFixed(4))} SOL`}</p>}
+          {!valid && amount && <p className="-mt-2 text-sm text-red-500">The smallest gift is {GIFT_MIN[currency]} {currency}.</p>}
+          {balance !== null && <p className="-mt-2 text-xs text-muted">In your wallet: {currency === "USDC" ? `$${balance.toFixed(2)}` : `${Number(balance.toFixed(4))} SOL`}</p>}
 
           <label className="flex flex-col gap-1.5 text-sm font-medium">
             A note for {writerName} (optional)
@@ -158,17 +163,17 @@ function GiftDialog({ poemId, writerName, writerHasWallet, viewer, onClose }: Pr
           </label>
 
           {split && (
-            <div className="rounded-2xl bg-black/5 p-3 text-sm">
+            <div className="rounded-2xl bg-soft p-3 text-sm">
               <div className="flex justify-between"><span>{writerName} receives</span><b>{formatAmount(split.writer, currency)}</b></div>
-              <div className="flex justify-between text-neutral-600"><span>Platform fee ({PLATFORM_FEE_PERCENT}%)</span><span>{formatAmount(split.fee, currency)}</span></div>
-              <p className="mt-1 text-xs text-neutral-500">Plus a tiny Solana network fee (less than a cent).</p>
+              <div className="flex justify-between text-muted"><span>Platform fee ({PLATFORM_FEE_PERCENT}%)</span><span>{formatAmount(split.fee, currency)}</span></div>
+              <p className="mt-1 text-xs text-muted">Plus a tiny Solana network fee (less than a cent).</p>
             </div>
           )}
 
           {!unlock.isOpen() && unlock.field}
-          {error && <p className="text-sm text-red-700">{error}</p>}
+          {error && <p className="text-sm text-red-500">{error}</p>}
           {step === "sending" ? (
-            <p className="text-sm text-neutral-700">{status}</p>
+            <p className="text-sm text-fg">{status}</p>
           ) : paid ? (
             // Already paid: never send twice, just check again.
             <button className={primary} onClick={() => check(paid.giftId, paid.signature)}>Check again</button>

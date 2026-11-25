@@ -49,15 +49,15 @@ export default function WalletPanel({ userId, linked, kind }: Props) {
   return (
     <div className="flex flex-col gap-6">
       {linked && kind === "own" && (
-        <section className="rounded-3xl bg-white/80 p-6 ring-1 ring-black/5">
-          <p className="text-sm text-neutral-600">Gifts are paid to this address you gave us:</p>
+        <section className="rounded-3xl bg-soft p-6 ring-1 ring-line">
+          <p className="text-sm text-muted">Gifts are paid to this address you gave us:</p>
           <div className="mt-2"><CopyAddress address={linked} /></div>
           <BalanceLine address={linked} />
-          <p className="mt-3 text-sm text-neutral-600">To send gifts to other writers, create a wallet here instead (below).</p>
+          <p className="mt-3 text-sm text-muted">To send gifts to other writers, create a wallet here instead (below).</p>
         </section>
       )}
       {linked && kind === "created" && local !== linked && (
-        <section className="rounded-3xl bg-amber-50 p-6 text-amber-950 ring-1 ring-amber-200">
+        <section className="rounded-3xl bg-amber-400/10 p-6 ring-1 ring-amber-400/30">
           <p className="font-medium">Your wallet isn&apos;t in this browser.</p>
           <p className="mt-1 text-sm">It was created on another device or browser. Use your 12 recovery words to open it here.</p>
           <p className="mt-2 font-mono text-xs">{linked}</p>
@@ -78,9 +78,9 @@ export default function WalletPanel({ userId, linked, kind }: Props) {
 
 function Choice({ title, text, action, onClick, highlight }: { title: string; text: string; action: string; onClick: () => void; highlight?: boolean }) {
   return (
-    <div className={`flex flex-col rounded-3xl p-5 ring-1 ${highlight ? "bg-white ring-neutral-900" : "bg-white/70 ring-black/10"}`}>
+    <div className={`flex flex-col rounded-3xl p-5 ring-1 ${highlight ? "bg-bg ring-fg" : "bg-soft ring-line"}`}>
       <h3 className="font-semibold">{title}</h3>
-      <p className="mt-1 flex-1 text-sm text-neutral-600">{text}</p>
+      <p className="mt-1 flex-1 text-sm text-muted">{text}</p>
       <button className={`${highlight ? primary : secondary} mt-4 self-start`} onClick={onClick}>{action}</button>
     </div>
   );
@@ -107,13 +107,13 @@ function PasswordFields({ onSubmit, busy, label }: { onSubmit: (pw: string) => v
         if (pw.length >= 8 && pw === pw2) onSubmit(pw);
       }}
     >
-      <p className="text-sm text-neutral-600">
+      <p className="text-sm text-muted">
         Choose a <b>wallet password</b>. You&apos;ll type it to send gifts. It stays on this device and we never see it, so we can&apos;t reset it. If you forget it, use your 12 words.
       </p>
       <input type="password" placeholder="Wallet password (8+ characters)" value={pw} onChange={(e) => setPw(e.target.value)} className={input} autoComplete="new-password" />
       <input type="password" placeholder="Type it again" value={pw2} onChange={(e) => setPw2(e.target.value)} className={input} autoComplete="new-password" />
-      {tooShort && <p className="text-sm text-red-700">At least 8 characters, please.</p>}
-      {mismatch && <p className="text-sm text-red-700">The two passwords don&apos;t match.</p>}
+      {tooShort && <p className="text-sm text-red-500">At least 8 characters, please.</p>}
+      {mismatch && <p className="text-sm text-red-500">The two passwords don&apos;t match.</p>}
       <button className={`${primary} self-start`} disabled={busy || pw.length < 8 || pw !== pw2}>{busy ? "Setting up…" : label}</button>
     </form>
   );
@@ -127,17 +127,17 @@ function CreateWallet({ userId, onDone, onCancel }: { userId: string; onDone: (a
   const [error, setError] = useState("");
 
   return (
-    <section className="rounded-3xl bg-white/90 p-6 ring-1 ring-black/5 sm:p-8">
+    <section className="rounded-3xl bg-soft p-6 ring-1 ring-line sm:p-8">
       <h2 className="font-display text-2xl font-semibold">{step === 1 ? "Your 12 recovery words" : "Lock your wallet"}</h2>
       {step === 1 ? (
         <>
-          <p className="mt-2 text-sm text-neutral-700">
+          <p className="mt-2 text-sm text-fg">
             These words <b>are</b> your wallet. Write them on paper, in order, and keep them somewhere safe. Anyone with these words can take your money, so never share them, not even with us. If you lose this device, these words are the only way back in.
           </p>
           <ol className="mt-5 grid grid-cols-2 gap-2 sm:grid-cols-3">
             {phrase.split(" ").map((w, i) => (
-              <li key={i} className="rounded-xl bg-black/5 px-3 py-2 font-mono text-sm">
-                <span className="mr-2 text-neutral-400">{i + 1}.</span>{w}
+              <li key={i} className="rounded-xl bg-soft px-3 py-2 font-mono text-sm">
+                <span className="mr-2 text-muted">{i + 1}.</span>{w}
               </li>
             ))}
           </ol>
@@ -166,7 +166,7 @@ function CreateWallet({ userId, onDone, onCancel }: { userId: string; onDone: (a
               }
             }}
           />
-          {error && <p className="mt-2 text-sm text-red-700">{error}</p>}
+          {error && <p className="mt-2 text-sm text-red-500">{error}</p>}
         </div>
       )}
     </section>
@@ -191,15 +191,15 @@ function RestoreWallet({ userId, linked, onDone, onCancel }: { userId: string; l
   }, [phrase, valid]);
 
   return (
-    <section className="rounded-3xl bg-white/90 p-6 ring-1 ring-black/5 sm:p-8">
+    <section className="rounded-3xl bg-soft p-6 ring-1 ring-line sm:p-8">
       <h2 className="font-display text-2xl font-semibold">Restore your wallet</h2>
-      <p className="mt-2 text-sm text-neutral-700">Type your 12 recovery words, in order, with spaces between them.</p>
+      <p className="mt-2 text-sm text-fg">Type your 12 recovery words, in order, with spaces between them.</p>
       <textarea value={phrase} onChange={(e) => setPhrase(e.target.value)} rows={3} className={`${input} mt-3 font-mono`} autoComplete="off" spellCheck={false} />
-      {phrase.trim().split(/\s+/).length >= 12 && !valid && <p className="mt-1 text-sm text-red-700">Those words don&apos;t make a valid recovery phrase. Check the spelling and order.</p>}
+      {phrase.trim().split(/\s+/).length >= 12 && !valid && <p className="mt-1 text-sm text-red-500">Those words don&apos;t make a valid recovery phrase. Check the spelling and order.</p>}
       {address && (
-        <p className="mt-2 text-sm text-neutral-700">
+        <p className="mt-2 text-sm text-fg">
           Wallet found: <span className="font-mono">{address}</span>
-          {linked && address !== linked && <span className="mt-1 block text-amber-800">This is a different wallet from the one on your account. Gifts will go to this one from now on.</span>}
+          {linked && address !== linked && <span className="mt-1 block text-amber-400">This is a different wallet from the one on your account. Gifts will go to this one from now on.</span>}
         </p>
       )}
       {address && (
@@ -220,7 +220,7 @@ function RestoreWallet({ userId, linked, onDone, onCancel }: { userId: string; l
           />
         </div>
       )}
-      {error && <p className="mt-2 text-sm text-red-700">{error}</p>}
+      {error && <p className="mt-2 text-sm text-red-500">{error}</p>}
       <button className={`${secondary} mt-4`} onClick={onCancel}>Cancel</button>
     </section>
   );
@@ -233,16 +233,16 @@ function OwnAddress({ onDone, onCancel }: { onDone: () => void; onCancel: () => 
   const [busy, setBusy] = useState(false);
   const ok = isAddress(address.trim());
   return (
-    <section className="rounded-3xl bg-white/90 p-6 ring-1 ring-black/5 sm:p-8">
+    <section className="rounded-3xl bg-soft p-6 ring-1 ring-line sm:p-8">
       <h2 className="font-display text-2xl font-semibold">Use your own wallet address</h2>
-      <p className="mt-2 text-sm text-neutral-700">Paste the Solana address where you want to receive gifts (for example from Phantom). Double-check it: money sent to a wrong address can&apos;t be brought back.</p>
+      <p className="mt-2 text-sm text-fg">Paste the Solana address where you want to receive gifts (for example from Phantom). Double-check it: money sent to a wrong address can&apos;t be brought back.</p>
       <input value={address} onChange={(e) => setAddress(e.target.value)} className={`${input} mt-3 font-mono`} placeholder="Solana address" spellCheck={false} />
-      {address && !ok && <p className="mt-1 text-sm text-red-700">That doesn&apos;t look like a Solana address.</p>}
+      {address && !ok && <p className="mt-1 text-sm text-red-500">That doesn&apos;t look like a Solana address.</p>}
       <label className="mt-3 flex items-start gap-2 text-sm">
         <input type="checkbox" checked={sure} onChange={(e) => setSure(e.target.checked)} className="mt-1" />
         I&apos;ve checked this is my address{IS_TEST_MONEY ? " (on the test network)" : ""}.
       </label>
-      {error && <p className="mt-2 text-sm text-red-700">{error}</p>}
+      {error && <p className="mt-2 text-sm text-red-500">{error}</p>}
       <div className="mt-4 flex gap-2">
         <button
           className={primary}
@@ -275,11 +275,11 @@ function BalanceLine({ address, refreshKey = 0 }: { address: string; refreshKey?
       live = false;
     };
   }, [address, refreshKey]);
-  if (err) return <p className="mt-3 text-sm text-neutral-500">Couldn&apos;t load the balance right now.</p>;
+  if (err) return <p className="mt-3 text-sm text-muted">Couldn&apos;t load the balance right now.</p>;
   return (
     <div className="mt-4 flex gap-6">
-      <div><p className="text-xs uppercase tracking-wider text-neutral-500">SOL</p><p className="text-2xl font-semibold">{b ? Number(b.sol.toFixed(4)) : "…"}</p></div>
-      <div><p className="text-xs uppercase tracking-wider text-neutral-500">USDC</p><p className="text-2xl font-semibold">{b ? `$${b.usdc.toFixed(2)}` : "…"}</p></div>
+      <div><p className="text-xs uppercase tracking-wider text-muted">SOL</p><p className="text-2xl font-semibold">{b ? Number(b.sol.toFixed(4)) : "…"}</p></div>
+      <div><p className="text-xs uppercase tracking-wider text-muted">USDC</p><p className="text-2xl font-semibold">{b ? `$${b.usdc.toFixed(2)}` : "…"}</p></div>
     </div>
   );
 }
@@ -290,12 +290,12 @@ function Dashboard({ userId, address, onRemoved }: { userId: string; address: st
   const reload = useCallback(() => setRefresh((n) => n + 1), []);
 
   return (
-    <section className="rounded-3xl bg-white/90 p-6 ring-1 ring-black/5 sm:p-8">
+    <section className="rounded-3xl bg-soft p-6 ring-1 ring-line sm:p-8">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h2 className="font-display text-2xl font-semibold">Your wallet</h2>
         {IS_TEST_MONEY && <TestMoneyBadge />}
       </div>
-      <p className="mt-3 text-sm text-neutral-600">Your address (share it to receive money):</p>
+      <p className="mt-3 text-sm text-muted">Your address (share it to receive money):</p>
       <div className="mt-1"><CopyAddress address={address} /></div>
       <BalanceLine address={address} refreshKey={refresh} />
 
@@ -311,13 +311,13 @@ function Dashboard({ userId, address, onRemoved }: { userId: string; address: st
         <a className={secondary} href={explorerAddress(address)} target="_blank" rel="noreferrer">View on Solana Explorer ↗</a>
       </div>
       {IS_TEST_MONEY && (
-        <p className="mt-3 text-xs text-neutral-500">
+        <p className="mt-3 text-xs text-muted">
           Free test money: copy your address above, then paste it at faucet.solana.com (test SOL) or faucet.circle.com (test USDC, choose Solana Devnet).
         </p>
       )}
 
       <button
-        className="mt-8 text-xs text-neutral-500 underline hover:text-red-700"
+        className="mt-8 text-xs text-muted underline hover:text-red-500"
         onClick={() => {
           if (confirm("Remove the wallet from this browser? You'll need your 12 words to open it again. The money stays in the wallet.")) {
             forgetLocalWallet(userId);
@@ -362,8 +362,8 @@ function SendDialog({ userId, onClose, onSent }: { userId: string; onClose: () =
           <input value={to} onChange={(e) => setTo(e.target.value)} placeholder="Send to (Solana address)" className={`${input} font-mono`} spellCheck={false} />
           <input value={amount} onChange={(e) => setAmount(e.target.value)} placeholder={`Amount in ${currency}`} inputMode="decimal" className={input} />
           {!unlock.isOpen() && unlock.field}
-          {error && <p className="text-sm text-red-700">{error}</p>}
-          <p className="text-xs text-neutral-500">Double-check the address. Payments on the blockchain can&apos;t be reversed.</p>
+          {error && <p className="text-sm text-red-500">{error}</p>}
+          <p className="text-xs text-muted">Double-check the address. Payments on the blockchain can&apos;t be reversed.</p>
           <button
             className={primary}
             disabled={!ok || unlock.busy}
@@ -382,7 +382,7 @@ function SendDialog({ userId, onClose, onSent }: { userId: string; onClose: () =
           >
             {unlock.busy ? "Opening wallet…" : `Send ${amount || ""} ${currency}`}
           </button>
-          <p className="text-xs text-neutral-400">Minimum gift elsewhere on the site is {GIFT_MIN.SOL} SOL / ${GIFT_MIN.USDC}.</p>
+          <p className="text-xs text-muted">Minimum gift elsewhere on the site is {GIFT_MIN.SOL} SOL / ${GIFT_MIN.USDC}.</p>
         </div>
       )}
     </Modal>
@@ -397,10 +397,10 @@ function PhraseDialog({ userId, onClose }: { userId: string; onClose: () => void
     <Modal title="Your 12 recovery words" onClose={onClose}>
       {phrase ? (
         <>
-          <p className="text-sm text-neutral-700">Make sure nobody can see your screen. Never share these words.</p>
+          <p className="text-sm text-fg">Make sure nobody can see your screen. Never share these words.</p>
           <ol className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3">
             {phrase.split(" ").map((w, i) => (
-              <li key={i} className="rounded-xl bg-black/5 px-3 py-2 font-mono text-sm"><span className="mr-2 text-neutral-400">{i + 1}.</span>{w}</li>
+              <li key={i} className="rounded-xl bg-soft px-3 py-2 font-mono text-sm"><span className="mr-2 text-muted">{i + 1}.</span>{w}</li>
             ))}
           </ol>
         </>
@@ -417,7 +417,7 @@ function PhraseDialog({ userId, onClose }: { userId: string; onClose: () => void
           }}
         >
           <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Wallet password" className={input} autoComplete="off" />
-          {error && <p className="text-sm text-red-700">{error}</p>}
+          {error && <p className="text-sm text-red-500">{error}</p>}
           <button className={`${primary} self-start`}>Show words</button>
         </form>
       )}

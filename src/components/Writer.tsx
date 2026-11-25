@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { poemExtensions } from "./editorExtensions";
+import { DrowsMark } from "./icons";
 import LineBar from "./LineBar";
 import LookPanel from "./LookPanel";
 import PoemCanvas from "./PoemCanvas";
@@ -114,8 +115,8 @@ export default function Writer({ initial, authorName, book }: Props) {
 
   return (
     <div className="flex min-h-screen flex-col">
-      <header className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b border-black/10 bg-paper/90 px-4 backdrop-blur">
-        <Link href="/" className="font-display text-2xl font-semibold tracking-tight">{SITE_NAME}</Link>
+      <header className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b border-line bg-bg/85 px-4 backdrop-blur-md">
+        <Link href="/" className="rounded-full p-1 hover:bg-hover" title={SITE_NAME}><DrowsMark size={30} /></Link>
         <span className="hidden truncate text-sm text-muted sm:inline">
           {book ? (
             <>
@@ -126,25 +127,25 @@ export default function Writer({ initial, authorName, book }: Props) {
         </span>
         <div className="ml-auto flex items-center gap-2">
           {editing && (
-            <button onClick={remove} className="rounded-full px-3 py-1.5 text-sm text-red-700 hover:bg-red-50">Delete</button>
+            <button onClick={remove} className="rounded-full px-3 py-1.5 text-sm text-red-500 hover:bg-red-500/10">Delete</button>
           )}
           {!editing && (
-            <button onClick={startOver} className="hidden rounded-full px-3 py-1.5 text-sm text-muted hover:bg-black/5 sm:block">Start over</button>
+            <button onClick={startOver} className="hidden rounded-full px-3 py-1.5 text-sm text-muted hover:bg-hover sm:block">Start over</button>
           )}
-          <button onClick={() => setShowLook((v) => !v)} className="rounded-full px-3 py-1.5 text-sm ring-1 ring-black/15 hover:bg-black/5 lg:hidden">
+          <button onClick={() => setShowLook((v) => !v)} className="rounded-full px-3 py-1.5 text-sm ring-1 ring-line hover:bg-hover lg:hidden">
             {showLook ? "Back to poem" : "Look & sound"}
           </button>
           <button
             onClick={publish}
             disabled={saving || !editor}
-            className="rounded-full bg-ink px-4 py-1.5 text-sm font-medium text-paper transition hover:opacity-90 disabled:opacity-40"
+            className="rounded-full bg-accent px-5 py-1.5 text-sm font-bold text-on-accent transition hover:brightness-110 disabled:opacity-40"
           >
             {saving ? "Saving…" : editing ? "Save changes" : "Publish"}
           </button>
         </div>
       </header>
 
-      {error && <p className="bg-red-50 px-4 py-2 text-center text-sm text-red-800">{error}</p>}
+      {error && <p className="bg-red-500/10 px-4 py-2 text-center text-sm text-red-500">{error}</p>}
 
       <div className="flex flex-1 flex-col lg:flex-row">
         <PoemCanvas style={style} className={`flex-1 ${showLook ? "hidden lg:block" : ""}`}>
@@ -172,14 +173,14 @@ export default function Writer({ initial, authorName, book }: Props) {
         </PoemCanvas>
 
         <aside
-          className={`${showLook ? "block" : "hidden"} w-full shrink-0 border-black/10 bg-paper p-5 lg:sticky lg:top-14 lg:block lg:h-[calc(100vh-3.5rem)] lg:w-[340px] lg:overflow-y-auto lg:border-l`}
+          className={`${showLook ? "block" : "hidden"} w-full shrink-0 border-line bg-bg p-5 lg:sticky lg:top-14 lg:block lg:h-[calc(100vh-3.5rem)] lg:w-[340px] lg:overflow-y-auto lg:border-l`}
         >
-          <div className="mb-5 grid grid-cols-2 rounded-full bg-black/5 p-1 text-sm">
+          <div className="mb-5 grid grid-cols-2 rounded-full bg-soft p-1 text-sm">
             {(["look", "sound"] as const).map((p) => (
               <button
                 key={p}
                 onClick={() => setPanel(p)}
-                className={`rounded-full py-1.5 transition ${panel === p ? "bg-white font-medium shadow-sm" : "text-muted hover:text-ink"}`}
+                className={`rounded-full py-1.5 transition ${panel === p ? "bg-bg font-bold shadow-sm ring-1 ring-line" : "text-muted hover:text-fg"}`}
               >
                 {p === "look" ? "Look" : "Sound & voice"}
               </button>

@@ -17,12 +17,18 @@ export const metadata: Metadata = {
   description: SITE_TAGLINE,
 };
 
-export const viewport: Viewport = { themeColor: "#f1e4c6" };
+export const viewport: Viewport = { themeColor: "#000000" };
+
+// Applies the saved light/dark choice before the page is drawn, so it never flashes.
+const themeScript = `try{var t=localStorage.getItem("drows:theme");if(t==="light"||t==="dark")document.documentElement.dataset.theme=t}catch(e){}`;
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   const fonts = [garamond, cormorant, lora, playfair, script, hand, typewriter, modern].map((f) => f.variable).join(" ");
   return (
-    <html lang="en" className={`${fonts} h-full antialiased`}>
+    <html lang="en" data-theme="dark" className={`${fonts} h-full antialiased`} suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+      </head>
       <body className="min-h-full flex flex-col">{children}</body>
     </html>
   );

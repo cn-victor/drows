@@ -6,7 +6,7 @@ import { SOUNDSCAPES, type Music } from "@/lib/sounds";
 import { READING_STYLES, VOICES } from "@/lib/voice";
 
 const label = "text-xs font-semibold uppercase tracking-wider text-muted";
-const chip = "rounded-full px-3 py-1.5 text-sm ring-1 ring-black/10 transition hover:bg-black/5";
+const chip = "rounded-full px-3 py-1.5 text-sm ring-1 ring-line transition hover:bg-hover";
 const chipOn = "bg-ink text-paper ring-ink hover:bg-ink";
 
 /** Side panel tab: background sound or music, and the AI reader's voice. */
@@ -102,7 +102,7 @@ export default function SoundPanel({ style, onChange, children }: { style: PoemS
           </div>
         )}
 
-        <details className="mt-2 rounded-xl bg-black/[0.03] p-3 text-sm" open={music.kind === "upload"}>
+        <details className="mt-2 rounded-xl bg-soft p-3 text-sm" open={music.kind === "upload"}>
           <summary className="cursor-pointer font-medium">Use your own music</summary>
           <label className="mt-3 flex items-start gap-2 text-muted">
             <input type="checkbox" checked={rights} onChange={(e) => setRights(e.target.checked)} className="mt-1" />
@@ -114,10 +114,10 @@ export default function SoundPanel({ style, onChange, children }: { style: PoemS
             accept="audio/mpeg,audio/mp4,audio/ogg,audio/wav,.mp3,.m4a,.ogg,.wav"
             disabled={!rights || uploading}
             onChange={(e) => e.target.files?.[0] && upload(e.target.files[0])}
-            className="mt-3 block w-full text-sm file:mr-3 file:rounded-full file:border-0 file:bg-ink file:px-3 file:py-1.5 file:text-paper disabled:opacity-40"
+            className="mt-3 block w-full text-sm file:mr-3 file:rounded-full file:border-0 file:bg-fg file:px-3 file:py-1.5 file:text-bg disabled:opacity-40"
           />
           <p className="mt-2 text-xs text-muted">{uploading ? "Uploading…" : "MP3, M4A, OGG or WAV, up to 15 MB."}</p>
-          {uploadError && <p className="mt-1 text-xs text-red-700">{uploadError}</p>}
+          {uploadError && <p className="mt-1 text-xs text-red-500">{uploadError}</p>}
         </details>
       </section>
 
@@ -126,7 +126,7 @@ export default function SoundPanel({ style, onChange, children }: { style: PoemS
         <select
           value={style.voice}
           onChange={(e) => onChange({ ...style, voice: e.target.value })}
-          className="rounded-xl bg-white/70 px-3 py-2 text-sm ring-1 ring-black/10"
+          className="rounded-xl bg-soft px-3 py-2 text-sm ring-1 ring-line"
         >
           {VOICES.map((v) => (
             <option key={v.id} value={v.id}>{v.label}</option>
@@ -149,7 +149,7 @@ export default function SoundPanel({ style, onChange, children }: { style: PoemS
       </section>
 
       {children && (
-        <section className="flex flex-col gap-2 border-t border-black/10 pt-5">
+        <section className="flex flex-col gap-2 border-t border-line pt-5">
           <h2 className={label}>Hear it</h2>
           {children}
         </section>

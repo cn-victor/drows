@@ -3,10 +3,12 @@ import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { setFollowing } from "@/app/actions";
 
-export default function FollowButton({ username, following, loggedIn }: { username: string; following: boolean; loggedIn: boolean }) {
+/** Follow / Following pill. Hovering "Following" offers to unfollow. */
+export default function FollowButton({ username, following, loggedIn, small = false }: { username: string; following: boolean; loggedIn: boolean; small?: boolean }) {
   const router = useRouter();
   const [on, setOn] = useState(following);
   const [pending, start] = useTransition();
+  const size = small ? "h-8 px-4 text-sm" : "h-9 px-5 text-[15px]";
   return (
     <button
       disabled={pending}
@@ -19,9 +21,18 @@ export default function FollowButton({ username, following, loggedIn }: { userna
           if (r.error) setOn(!next);
         });
       }}
-      className={`rounded-full px-5 py-2 text-sm font-medium transition ${on ? "bg-white ring-1 ring-black/15 hover:bg-red-50 hover:text-red-700" : "bg-ink text-paper hover:opacity-90"}`}
+      className={`group shrink-0 rounded-full font-bold transition ${size} ${
+        on ? "ring-1 ring-line hover:bg-red-500/10 hover:text-red-500 hover:ring-red-500/40" : "bg-fg text-bg hover:opacity-90"
+      }`}
     >
-      {on ? "Following" : "Follow"}
+      {on ? (
+        <>
+          <span className="group-hover:hidden">Following</span>
+          <span className="hidden group-hover:inline">Unfollow</span>
+        </>
+      ) : (
+        "Follow"
+      )}
     </button>
   );
 }

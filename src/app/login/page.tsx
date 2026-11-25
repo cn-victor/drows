@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import AuthForm from "@/components/AuthForm";
-import SiteHeader from "@/components/SiteHeader";
+import AppShell from "@/components/shell/AppShell";
 import { currentUser } from "@/server/auth";
 
 export const metadata = { title: "Log in" };
@@ -15,14 +15,13 @@ async function Body({ searchParams }: { searchParams: PageProps<"/login">["searc
 
 export default function LoginPage(props: PageProps<"/login">) {
   return (
-    <>
-      <SiteHeader />
-      <main className="mx-auto w-full max-w-md flex-1 px-6 py-14">
-        <h1 className="mb-8 text-center font-display text-4xl font-semibold">Welcome back</h1>
+    <AppShell>
+      <div className="px-4 py-6 sm:px-8">
+        <h1 className="mb-8 text-center text-3xl font-extrabold">Welcome back</h1>
         <Suspense>
           <Body searchParams={props.searchParams} />
         </Suspense>
-      </main>
-    </>
+      </div>
+    </AppShell>
   );
 }

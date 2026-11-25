@@ -2,7 +2,7 @@
 import { useActionState } from "react";
 import { saveProfile, type FormState } from "@/app/actions";
 
-const input = "w-full rounded-xl bg-white px-4 py-3 text-base ring-1 ring-black/15 outline-none focus:ring-2 focus:ring-ink";
+const input = "w-full rounded-xl bg-bg px-4 py-3 text-base ring-1 ring-line outline-none focus:ring-2 focus:ring-accent";
 
 export default function SettingsForm({ name, bio }: { name: string; bio: string }) {
   const [state, action, pending] = useActionState<FormState, FormData>(saveProfile, null);
@@ -16,8 +16,8 @@ export default function SettingsForm({ name, bio }: { name: string; bio: string 
         About you (shown on your profile)
         <textarea name="bio" defaultValue={bio} maxLength={300} rows={4} className={input} placeholder="A line or two about you and your writing" />
       </label>
-      {state?.error && <p className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-800">{state.error}</p>}
-      {state?.ok && !pending && <p className="rounded-xl bg-green-50 px-4 py-3 text-sm text-green-800">Saved.</p>}
+      {state?.error && <p className="rounded-xl bg-red-500/10 px-4 py-3 text-sm text-red-500">{state.error}</p>}
+      {state?.ok && !pending && <p className="rounded-xl bg-emerald-500/10 px-4 py-3 text-sm text-emerald-500">Saved.</p>}
       <button disabled={pending} className="self-start rounded-full bg-ink px-6 py-2.5 font-medium text-paper hover:opacity-90 disabled:opacity-50">
         {pending ? "Saving…" : "Save"}
       </button>

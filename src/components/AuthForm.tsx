@@ -4,7 +4,7 @@ import { useActionState, useEffect, useState } from "react";
 import { login, signup, type FormState } from "@/app/actions";
 import { myPoems } from "@/lib/mine";
 
-const input = "w-full rounded-xl bg-white px-4 py-3 text-base ring-1 ring-black/15 outline-none focus:ring-2 focus:ring-ink";
+const input = "w-full rounded-xl bg-bg px-4 py-3 text-base ring-1 ring-line outline-none focus:ring-2 focus:ring-accent";
 
 /** The sign-up and log-in forms. */
 export default function AuthForm({ mode, next }: { mode: "signup" | "login"; next: string }) {
@@ -29,7 +29,7 @@ export default function AuthForm({ mode, next }: { mode: "signup" | "login"; nex
           </label>
           <label className="flex flex-col gap-1.5 text-sm font-medium">
             Username
-            <div className="flex items-center gap-1 rounded-xl bg-white pl-4 ring-1 ring-black/15 focus-within:ring-2 focus-within:ring-ink">
+            <div className="flex items-center gap-1 rounded-xl bg-bg pl-4 ring-1 ring-line focus-within:ring-2 focus-within:ring-ink">
               <span className="text-muted">@</span>
               <input
                 name="username"
@@ -66,7 +66,7 @@ export default function AuthForm({ mode, next }: { mode: "signup" | "login"; nex
         </>
       )}
 
-      {state?.error && <p className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-800">{state.error}</p>}
+      {state?.error && <p className="rounded-xl bg-red-500/10 px-4 py-3 text-sm text-red-500">{state.error}</p>}
 
       <button disabled={pending} className="mt-2 rounded-full bg-ink px-6 py-3 font-medium text-paper transition hover:opacity-90 disabled:opacity-50">
         {pending ? "One moment…" : mode === "signup" ? "Create my account" : "Log in"}

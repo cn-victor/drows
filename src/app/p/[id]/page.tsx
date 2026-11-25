@@ -4,18 +4,21 @@ import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import Avatar from "@/components/Avatar";
 import Comments from "@/components/Comments";
+import FollowButton from "@/components/FollowButton";
+import { BookIcon } from "@/components/icons";
 import PoemActions from "@/components/PoemActions";
 import PoemCanvas from "@/components/PoemCanvas";
 import PoemPlayer from "@/components/PoemPlayer";
-import ShareBar from "@/components/ShareBar";
+import AppShell from "@/components/shell/AppShell";
+import ColumnHeader from "@/components/shell/ColumnHeader";
+import TimeAgo from "@/components/TimeAgo";
 import GiftButton from "@/components/wallet/GiftButton";
 import { excerpt, renderDoc, type Poem } from "@/lib/poem";
 import { buildSegments } from "@/lib/segments";
 import { SITE_NAME } from "@/lib/site";
 import { currentUser } from "@/server/auth";
-import { chaptersOf, getPoem } from "@/server/poems";
 import { one } from "@/server/db";
-import { giftCount } from "@/server/gifts";
+import { chaptersOf, getPoem } from "@/server/poems";
 import { commentsOn } from "@/server/social";
 
 export async function generateMetadata(props: PageProps<"/p/[id]">): Promise<Metadata> {
@@ -30,35 +33,35 @@ export async function generateMetadata(props: PageProps<"/p/[id]">): Promise<Met
   };
 }
 
-/** For book chapters: "Chapter 2 of …" with links to the chapters before and after. */
-async function ChapterNav({ poem, where }: { poem: Poem; where: "top" | "bottom" }) {
+/** For book chapters: "Chapter 2 of 5", with the chapters before and after. */
+async function ChapterNav({ poem }: { poem: Poem }) {
   if (!poem.bookId) return null;
   const chapters = await chaptersOf(poem.bookId);
   const i = chapters.findIndex((c) => c.id === poem.id);
   const prev = chapters[i - 1];
   const next = chapters[i + 1];
-  if (where === "top") {
-    return (
-      <Link href={`/b/${poem.bookId}`} className="mb-4 inline-block text-xs uppercase tracking-widest hover:underline" style={{ color: "var(--poem-muted)" }}>
-        {poem.bookTitle} · Chapter {i + 1} of {chapters.length}
-      </Link>
-    );
-  }
   return (
-    <nav className="mt-14 grid grid-cols-2 gap-3 text-sm">
-      {prev ? (
-        <Link href={`/p/${prev.id}`} className="rounded-2xl p-4 ring-1 ring-current/20 hover:bg-white/10">
-          <span style={{ color: "var(--poem-muted)" }}>← Previous</span>
-          <span className="mt-1 block font-medium">{prev.title}</span>
-        </Link>
-      ) : <span />}
-      {next ? (
-        <Link href={`/p/${next.id}`} className="rounded-2xl p-4 text-right ring-1 ring-current/20 hover:bg-white/10">
-          <span style={{ color: "var(--poem-muted)" }}>Next →</span>
-          <span className="mt-1 block font-medium">{next.title}</span>
-        </Link>
-      ) : <span />}
-    </nav>
+    <div className="border-b border-line px-4 py-3">
+      <Link href={`/b/${poem.bookId}`} className="inline-flex items-center gap-1.5 text-[15px] text-muted hover:underline">
+        <BookIcon size={16} /> {poem.bookTitle} · Chapter {i + 1} of {chapters.length}
+      </Link>
+      {(prev || next) && (
+        <div className="mt-3 grid grid-cols-2 gap-3 text-sm">
+          {prev ? (
+            <Link href={`/p/${prev.id}`} className="rounded-xl p-3 ring-1 ring-line hover:bg-hover">
+              <span className="text-muted">← Previous</span>
+              <span className="mt-0.5 block truncate font-bold">{prev.title}</span>
+            </Link>
+          ) : <span />}
+          {next ? (
+            <Link href={`/p/${next.id}`} className="rounded-xl p-3 text-right ring-1 ring-line hover:bg-hover">
+              <span className="text-muted">Next →</span>
+              <span className="mt-0.5 block truncate font-bold">{next.title}</span>
+            </Link>
+          ) : <span />}
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -68,82 +71,110 @@ async function PoemView({ params, searchParams }: { params: PageProps<"/p/[id]">
   if (!poem) notFound();
   const { style } = poem;
   const isOwner = !!me && me.id === poem.authorId;
-  const [comments, gifts, writer] = await Promise.all([
+  const [comments, writer] = await Promise.all([
     commentsOn(poem.id),
-    giftCount(poem.id),
     poem.authorId ? one("SELECT wallet_address FROM users WHERE id = ?", [poem.authorId]) : null,
   ]);
-  const justify = style.align === "center" ? "justify-center" : style.align === "right" ? "justify-end" : "justify-start";
+  const stats = [
+    [poem.reposts, poem.reposts === 1 ? "Repost" : "Reposts"],
+    [poem.likes, poem.likes === 1 ? "Like" : "Likes"],
+    [poem.gifts, poem.gifts === 1 ? "Gift" : "Gifts"],
+  ].filter(([n]) => Number(n) > 0) as [number, string][];
 
   return (
-    <PoemCanvas style={style} className="min-h-screen">
-      <header className="flex items-center justify-between px-5 py-4 sm:px-8">
-        <Link href="/" className="font-display text-xl font-semibold opacity-80 transition hover:opacity-100" style={{ color: "var(--poem-ink)" }}>
-          {SITE_NAME}
-        </Link>
-        {me ? (
-          <Link href={`/u/${me.username}`} title="Your profile"><Avatar name={me.name} username={me.username} size={30} /></Link>
-        ) : (
-          <Link href={`/login?next=/p/${poem.id}`} className="text-sm opacity-80 hover:opacity-100">Log in</Link>
-        )}
-      </header>
-      <article className="mx-auto max-w-2xl px-6 pb-16 pt-6 sm:px-8 sm:pt-12">
-        <div style={{ textAlign: style.align }}>
-          <ChapterNav poem={poem} where="top" />
-        </div>
-        <h1 className="text-4xl font-semibold leading-tight sm:text-5xl" style={{ fontFamily: "var(--poem-font)", textAlign: style.align }}>
-          {poem.title}
-        </h1>
-        <p className="mt-2 text-lg italic" style={{ color: "var(--poem-muted)", fontFamily: "var(--poem-font)", textAlign: style.align }}>
-          by {poem.username ? <Link href={`/u/${poem.username}`} className="hover:underline">{poem.author}</Link> : poem.author}
-        </p>
-        <div className="mt-6">
-          <PoemPlayer poemId={poem.id} segments={buildSegments(poem.doc)} music={style.music} align={style.align} />
-        </div>
-        {/* The poem was cleaned when it was saved and loaded, so only safe formatting reaches the page. */}
-        <div data-poem className="poem-body mt-10" dangerouslySetInnerHTML={{ __html: renderDoc(poem.doc) }} />
+    <>
+      <ColumnHeader back title={poem.bookId ? "Chapter" : "Poem"} />
+      {sp.new === "1" && isOwner && (
+        <p className="border-b border-line bg-accent/15 px-4 py-3 text-[15px]">Your poem is live. Share it with the ↑ button below.</p>
+      )}
+      <ChapterNav poem={poem} />
 
-        <div className={`mt-12 flex flex-wrap items-center gap-1 ${justify}`}>
+      <article className="px-4 pt-3">
+        {/* Writer */}
+        <div className="flex items-center gap-3">
+          <Link href={poem.username ? `/u/${poem.username}` : "#"}><Avatar name={poem.author} username={poem.username ?? poem.author} size={40} /></Link>
+          <Link href={poem.username ? `/u/${poem.username}` : "#"} className="min-w-0 flex-1 leading-tight">
+            <span className="block truncate font-bold hover:underline">{poem.author}</span>
+            {poem.username && <span className="block truncate text-[15px] text-muted">@{poem.username}</span>}
+          </Link>
+          {isOwner ? (
+            <Link href={`/write?edit=${poem.id}`} className="flex h-8 items-center rounded-full px-4 text-sm font-bold ring-1 ring-line hover:bg-hover">Edit</Link>
+          ) : (
+            poem.username && <FollowButton username={poem.username} following={false} loggedIn={!!me} small />
+          )}
+        </div>
+
+        {/* The poem, on its own theme, with music and the reader */}
+        <PoemCanvas style={style} className="mt-3 overflow-hidden rounded-2xl border border-line">
+          <div className="px-6 pb-10 pt-8 sm:px-10">
+            <h1 className="text-3xl font-semibold leading-tight sm:text-4xl" style={{ fontFamily: "var(--poem-font)", textAlign: style.align }}>
+              {poem.title}
+            </h1>
+            <p className="mt-1 text-lg italic" style={{ color: "var(--poem-muted)", fontFamily: "var(--poem-font)", textAlign: style.align }}>
+              by {poem.author}
+            </p>
+            <div className="mt-5">
+              <PoemPlayer poemId={poem.id} segments={buildSegments(poem.doc)} music={style.music} align={style.align} />
+            </div>
+            {/* The poem was cleaned when it was saved and loaded, so only safe formatting reaches the page. */}
+            <div data-poem className="poem-body mt-8" dangerouslySetInnerHTML={{ __html: renderDoc(poem.doc) }} />
+          </div>
+        </PoemCanvas>
+
+        <p className="mt-4 text-[15px] text-muted"><TimeAgo at={poem.createdAt} long /></p>
+        {stats.length > 0 && (
+          <p className="mt-3 flex gap-5 border-t border-line py-3 text-[15px]">
+            {stats.map(([n, label]) => (
+              <span key={label}><b>{n}</b> <span className="text-muted">{label}</span></span>
+            ))}
+          </p>
+        )}
+        <div className="mt-3 border-y border-line py-1">
           <PoemActions
+            big
             poemId={poem.id}
             likes={poem.likes}
             reposts={poem.reposts}
             comments={comments.length}
+            gifts={poem.gifts}
             liked={poem.liked}
             reposted={poem.reposted}
             isOwner={isOwner}
             loggedIn={!!me}
-            commentsHref="#comments"
+            giftSlot={
+              poem.authorId ? (
+                <GiftButton
+                  poemId={poem.id}
+                  writerName={poem.author}
+                  writerHasWallet={!!writer?.wallet_address}
+                  isOwner={isOwner}
+                  viewer={me ? { id: me.id, walletAddress: me.walletAddress } : null}
+                  giftCount={poem.gifts}
+                  autoOpen={sp.gift === "1"}
+                />
+              ) : undefined
+            }
           />
-          {poem.authorId && (
-            <GiftButton
-              poemId={poem.id}
-              writerName={poem.author}
-              writerHasWallet={!!writer?.wallet_address}
-              isOwner={isOwner}
-              viewer={me ? { id: me.id, walletAddress: me.walletAddress } : null}
-              giftCount={gifts}
-            />
-          )}
-        </div>
-
-        <ChapterNav poem={poem} where="bottom" />
-
-        <div className="mt-12">
-          <ShareBar id={poem.id} title={poem.title} isNew={sp.new === "1"} isOwner={isOwner} />
-        </div>
-        <div className="mt-14">
-          <Comments poemId={poem.id} comments={comments} viewerId={me?.id ?? null} isPoemOwner={isOwner} />
         </div>
       </article>
-    </PoemCanvas>
+
+      <Comments
+        poemId={poem.id}
+        comments={comments}
+        viewer={me ? { id: me.id, username: me.username, name: me.name } : null}
+        isPoemOwner={isOwner}
+        replyingTo={poem.username}
+      />
+    </>
   );
 }
 
 export default function PoemPage(props: PageProps<"/p/[id]">) {
   return (
-    <Suspense fallback={<div className="grid min-h-screen place-items-center text-muted">Opening poem…</div>}>
-      <PoemView params={props.params} searchParams={props.searchParams} />
-    </Suspense>
+    <AppShell>
+      <Suspense fallback={<p className="p-8 text-center text-muted">Opening poem…</p>}>
+        <PoemView params={props.params} searchParams={props.searchParams} />
+      </Suspense>
+    </AppShell>
   );
 }

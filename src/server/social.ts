@@ -59,3 +59,31 @@ export async function setFollow(userId: string, targetId: string, on: boolean) {
   if (on) await run("INSERT OR IGNORE INTO follows (follower_id, followee_id, created_at) VALUES (?, ?, ?)", [userId, targetId, Date.now()]);
   else await run("DELETE FROM follows WHERE follower_id = ? AND followee_id = ?", [userId, targetId]);
 }
+
+/** Writers to suggest in the sidebar: active writers you don't follow yet. */
+export async function suggestedWriters(viewerId: string | null, limit = 3) {
+  const rows = await all(
+    `SELECT u.username, u.display_name, u.bio, (SELECT COUNT(*) FROM poems WHERE author_id = u.id) AS n
+     FROM users u
+     WHERE u.id != ? AND u.id NOT IN (SELECT followee_id FROM follows WHERE follower_id = ?)
+     ORDER BY n DESC, u.created_at DESC LIMIT ?`,
+    [viewerId ?? "", viewerId ?? "", limit],
+  );
+  return rows.map((r) => ({ username: String(r.username), name: String(r.display_name), bio: String(r.bio ?? "") }));
+}
+
+/** Simple search across writers and poems (titles and words). */
+export async function searchAll(q: string) {
+  const term = `%${q.trim().toLowerCase().replace(/[%_]/g, "")}%`;
+  const [people, poems] = await Promise.all([
+    all(
+      `SELECT username, display_name, bio FROM users WHERE lower(username) LIKE ? OR lower(display_name) LIKE ? ORDER BY created_at DESC LIMIT 10`,
+      [term, term],
+    ),
+    all(`SELECT id FROM poems WHERE lower(title) LIKE ? OR lower(doc) LIKE ? ORDER BY created_at DESC LIMIT 40`, [term, term]),
+  ]);
+  return {
+    people: people.map((r) => ({ username: String(r.username), name: String(r.display_name), bio: String(r.bio ?? "") })),
+    poemIds: poems.map((r) => String(r.id)),
+  };
+}

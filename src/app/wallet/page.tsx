@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
-import SiteHeader from "@/components/SiteHeader";
+import AppShell from "@/components/shell/AppShell";
 import WalletPanel from "@/components/wallet/WalletPanel";
 import { explorerTx, formatAmount, PLATFORM_FEE_PERCENT, type Currency } from "@/lib/chain";
 import { currentUser } from "@/server/auth";
@@ -18,7 +18,7 @@ function totals(rows: GiftRow[], field: "writer" | "total") {
 function History({ title, rows, dir }: { title: string; rows: GiftRow[]; dir: "received" | "sent" }) {
   const sum = totals(rows, dir === "received" ? "writer" : "total");
   return (
-    <section className="rounded-3xl bg-white/80 p-6 ring-1 ring-black/5">
+    <section className="rounded-3xl bg-soft p-6 ring-1 ring-line">
       <div className="flex items-baseline justify-between gap-2">
         <h2 className="font-display text-2xl font-semibold">{title}</h2>
         {sum.length > 0 && <p className="text-sm text-muted">Total: <b className="text-ink">{sum.join(" + ")}</b></p>}
@@ -26,7 +26,7 @@ function History({ title, rows, dir }: { title: string; rows: GiftRow[]; dir: "r
       {rows.length === 0 ? (
         <p className="mt-3 text-sm text-muted">{dir === "received" ? "No gifts yet. When readers send you one, it shows here." : "You haven't sent any gifts yet."}</p>
       ) : (
-        <ul className="mt-4 flex flex-col divide-y divide-black/5">
+        <ul className="mt-4 flex flex-col divide-y divide-line">
           {rows.map((g) => (
             <li key={g.id} className="flex flex-wrap items-baseline gap-x-3 gap-y-1 py-3 text-sm">
               <b className="text-base">{formatAmount(dir === "received" ? g.writer : g.total, g.currency)}</b>
@@ -38,7 +38,7 @@ function History({ title, rows, dir }: { title: string; rows: GiftRow[]; dir: "r
               </span>
               <span className="text-muted">{new Date(g.at).toLocaleDateString()}</span>
               <a href={explorerTx(g.signature)} target="_blank" rel="noreferrer" className="text-xs text-muted underline">receipt ↗</a>
-              {g.message && <p className="w-full font-serif text-base italic text-neutral-700">&ldquo;{g.message}&rdquo;</p>}
+              {g.message && <p className="w-full font-serif text-base italic text-fg">&ldquo;{g.message}&rdquo;</p>}
             </li>
           ))}
         </ul>
@@ -66,14 +66,13 @@ async function Body() {
 
 export default function WalletPage() {
   return (
-    <>
-      <SiteHeader />
-      <main className="mx-auto w-full max-w-3xl flex-1 px-6 py-12">
-        <h1 className="mb-8 font-display text-4xl font-semibold">Wallet</h1>
+    <AppShell>
+      <div className="px-4 py-6 sm:px-8">
+        <h1 className="mb-8 text-3xl font-extrabold">Wallet</h1>
         <Suspense fallback={<p className="text-muted">Opening your wallet…</p>}>
           <Body />
         </Suspense>
-      </main>
-    </>
+      </div>
+    </AppShell>
   );
 }

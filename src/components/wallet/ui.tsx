@@ -4,23 +4,23 @@ import { useState, type ReactNode } from "react";
 import { unlockWallet, unlockedWallet } from "@/lib/wallet";
 import type { Keypair } from "@solana/web3.js";
 
-export const input = "w-full rounded-xl bg-white px-4 py-3 text-base text-neutral-900 ring-1 ring-black/15 outline-none focus:ring-2 focus:ring-neutral-900";
-export const primary = "rounded-full bg-neutral-900 px-5 py-2.5 text-sm font-medium text-white transition hover:opacity-90 disabled:opacity-40";
-export const secondary = "rounded-full px-4 py-2 text-sm text-neutral-800 ring-1 ring-black/15 transition hover:bg-black/5 disabled:opacity-40";
+export const input = "w-full rounded-xl bg-bg px-4 py-3 text-base text-fg ring-1 ring-line outline-none focus:ring-2 focus:ring-fg";
+export const primary = "rounded-full bg-fg px-5 py-2.5 text-sm font-bold text-bg transition hover:opacity-90 disabled:opacity-40";
+export const secondary = "rounded-full px-4 py-2 text-sm text-fg ring-1 ring-line transition hover:bg-hover disabled:opacity-40";
 
 export function Modal({ title, onClose, children }: { title: string; onClose: () => void; children: ReactNode }) {
   return (
-    <div className="fixed inset-0 z-50 grid place-items-center bg-black/50 p-4 backdrop-blur-sm" onClick={onClose}>
+    <div className="fixed inset-0 z-50 grid place-items-center bg-black/60 p-4 backdrop-blur-sm" onClick={onClose}>
       <div
         role="dialog"
         aria-modal
         aria-label={title}
-        className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-3xl bg-[#fbf7ee] p-6 text-neutral-900 shadow-2xl"
+        className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-3xl bg-bg ring-1 ring-line p-6 text-fg shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="mb-4 flex items-start justify-between gap-4">
           <h2 className="font-display text-2xl font-semibold">{title}</h2>
-          <button onClick={onClose} aria-label="Close" className="-mr-2 -mt-1 rounded-full px-2 text-2xl leading-none text-neutral-500 hover:bg-black/5">×</button>
+          <button onClick={onClose} aria-label="Close" className="-mr-2 -mt-1 rounded-full px-2 text-2xl leading-none text-muted hover:bg-hover">×</button>
         </div>
         {children}
       </div>
@@ -30,7 +30,7 @@ export function Modal({ title, onClose, children }: { title: string; onClose: ()
 
 export function TestMoneyBadge() {
   return (
-    <span className="rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-medium text-amber-900" title="Solana's test network: the money has no real value">
+    <span className="rounded-full bg-amber-400/15 px-2.5 py-0.5 text-xs font-medium text-amber-400" title="Solana's test network: the money has no real value">
       Test network · not real money
     </span>
   );
@@ -49,10 +49,10 @@ export function CopyAddress({ address }: { address: string }) {
         setCopied(true);
         setTimeout(() => setCopied(false), 1500);
       }}
-      className="break-all rounded-xl bg-black/5 px-3 py-2 text-left font-mono text-sm hover:bg-black/10"
+      className="break-all rounded-xl bg-soft px-3 py-2 text-left font-mono text-sm hover:bg-hover"
       title="Copy address"
     >
-      {address} <span className="ml-1 font-sans text-xs text-neutral-500">{copied ? "✓ copied" : "copy"}</span>
+      {address} <span className="ml-1 font-sans text-xs text-muted">{copied ? "✓ copied" : "copy"}</span>
     </button>
   );
 }
@@ -83,7 +83,7 @@ export function useUnlock(userId: string) {
     <label className="flex flex-col gap-1.5 text-sm font-medium">
       Wallet password
       <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="off" className={input} />
-      {error && <span className="text-sm font-normal text-red-700">{error}</span>}
+      {error && <span className="text-sm font-normal text-red-500">{error}</span>}
     </label>
   );
   return { isOpen, getKeypair, field, busy, password };

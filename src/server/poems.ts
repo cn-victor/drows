@@ -9,6 +9,7 @@ const SELECT = `
     (SELECT COUNT(*) FROM likes WHERE poem_id = p.id) AS like_count,
     (SELECT COUNT(*) FROM reposts WHERE poem_id = p.id) AS repost_count,
     (SELECT COUNT(*) FROM comments WHERE poem_id = p.id) AS comment_count,
+    (SELECT COUNT(*) FROM gifts WHERE poem_id = p.id AND status = 'confirmed') AS gift_count,
     EXISTS (SELECT 1 FROM likes WHERE poem_id = p.id AND user_id = :viewer) AS liked,
     EXISTS (SELECT 1 FROM reposts WHERE poem_id = p.id AND user_id = :viewer) AS reposted
   FROM poems p
@@ -32,6 +33,7 @@ function toPoem(r: Row): Poem {
     likes: Number(r.like_count ?? 0),
     reposts: Number(r.repost_count ?? 0),
     comments: Number(r.comment_count ?? 0),
+    gifts: Number(r.gift_count ?? 0),
     liked: !!Number(r.liked ?? 0),
     reposted: !!Number(r.reposted ?? 0),
   };
@@ -146,4 +148,10 @@ export async function claimPoems(userId: string, name: string, claims: { id: str
     moved += await run("UPDATE poems SET author_id = ?, author = ? WHERE id = ? AND author_id IS NULL AND edit_hash = ?", [userId, name, c.id, sha256(c.editKey)]);
   }
   return moved;
+}
+
+/** Several poems by id, kept in the order given. */
+export async function getPoems(ids: string[], viewer?: string | null): Promise<Poem[]> {
+  const map = await poemsByIds(ids, v(viewer));
+  return ids.flatMap((id) => map.get(id) ?? []);
 }

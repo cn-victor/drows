@@ -4,7 +4,7 @@ import { saveBook, type FormState } from "@/app/actions";
 import { FONTS } from "@/lib/fonts";
 import { THEMES } from "@/lib/themes";
 
-const input = "w-full rounded-xl bg-white px-4 py-3 text-base ring-1 ring-black/15 outline-none focus:ring-2 focus:ring-ink";
+const input = "w-full rounded-xl bg-bg px-4 py-3 text-base ring-1 ring-line outline-none focus:ring-2 focus:ring-accent";
 
 /** Create or edit a book: title, description and cover theme. */
 export default function BookForm({ book }: { book?: { id: string; title: string; description: string; theme: string } }) {
@@ -30,7 +30,7 @@ export default function BookForm({ book }: { book?: { id: string; title: string;
               type="button"
               key={t.id}
               onClick={() => setTheme(t.id)}
-              className={`flex h-24 items-end rounded-r-xl rounded-l-sm border-l-4 border-black/20 p-2 text-left text-sm transition ${theme === t.id ? "ring-2 ring-ink ring-offset-2" : "ring-1 ring-black/10"}`}
+              className={`flex h-24 items-end rounded-r-xl rounded-l-sm border-l-4 border-line p-2 text-left text-sm transition ${theme === t.id ? "ring-2 ring-accent ring-offset-2 ring-offset-bg" : "ring-1 ring-line"}`}
               style={{ background: t.background, color: t.ink, fontFamily: FONTS.find((f) => f.key === t.font)?.css }}
             >
               {t.name}
@@ -38,7 +38,7 @@ export default function BookForm({ book }: { book?: { id: string; title: string;
           ))}
         </div>
       </fieldset>
-      {state?.error && <p className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-800">{state.error}</p>}
+      {state?.error && <p className="rounded-xl bg-red-500/10 px-4 py-3 text-sm text-red-500">{state.error}</p>}
       <button disabled={pending} className="self-start rounded-full bg-ink px-6 py-3 font-medium text-paper hover:opacity-90 disabled:opacity-50">
         {pending ? "Saving…" : book ? "Save book" : "Create book"}
       </button>

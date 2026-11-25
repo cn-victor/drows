@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import BookForm from "@/components/BookForm";
-import SiteHeader from "@/components/SiteHeader";
+import AppShell from "@/components/shell/AppShell";
 import { currentUser } from "@/server/auth";
 
 export const metadata = { title: "New book" };
@@ -13,15 +13,14 @@ async function Body() {
 
 export default function NewBookPage() {
   return (
-    <>
-      <SiteHeader />
-      <main className="mx-auto w-full max-w-2xl flex-1 px-6 py-14">
-        <h1 className="font-display text-4xl font-semibold">Start a book</h1>
+    <AppShell>
+      <div className="px-4 py-6 sm:px-8">
+        <h1 className="text-3xl font-extrabold">Start a book</h1>
         <p className="mb-8 mt-2 text-muted">A book is a collection of poems or chapters. After creating it you can add chapters one by one.</p>
         <Suspense>
           <Body />
         </Suspense>
-      </main>
-    </>
+      </div>
+    </AppShell>
   );
 }

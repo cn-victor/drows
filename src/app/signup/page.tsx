@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import AuthForm from "@/components/AuthForm";
-import SiteHeader from "@/components/SiteHeader";
+import AppShell from "@/components/shell/AppShell";
 import { SITE_NAME } from "@/lib/site";
 import { currentUser } from "@/server/auth";
 
@@ -16,15 +16,14 @@ async function Body({ searchParams }: { searchParams: PageProps<"/signup">["sear
 
 export default function SignupPage(props: PageProps<"/signup">) {
   return (
-    <>
-      <SiteHeader />
-      <main className="mx-auto w-full max-w-md flex-1 px-6 py-14">
-        <h1 className="text-center font-display text-4xl font-semibold">Join {SITE_NAME}</h1>
+    <AppShell>
+      <div className="px-4 py-6 sm:px-8">
+        <h1 className="text-center text-3xl font-extrabold">Join {SITE_NAME}</h1>
         <p className="mb-8 mt-2 text-center text-muted">Write, share, and find readers for your poems and books.</p>
         <Suspense>
           <Body searchParams={props.searchParams} />
         </Suspense>
-      </main>
-    </>
+      </div>
+    </AppShell>
   );
 }

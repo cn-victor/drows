@@ -2,10 +2,13 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
+import Avatar from "@/components/Avatar";
+import { BookCover } from "@/components/BookRow";
 import ChapterMove from "@/components/ChapterMove";
-import PoemCanvas from "@/components/PoemCanvas";
-import SiteHeader from "@/components/SiteHeader";
-import { defaultStyle, excerpt } from "@/lib/poem";
+import { HeartIcon } from "@/components/icons";
+import AppShell from "@/components/shell/AppShell";
+import ColumnHeader from "@/components/shell/ColumnHeader";
+import { excerpt } from "@/lib/poem";
 import { currentUser } from "@/server/auth";
 import { getBook } from "@/server/books";
 import { chaptersOf } from "@/server/poems";
@@ -22,66 +25,62 @@ async function BookView({ params }: { params: PageProps<"/b/[id]">["params"] }) 
   if (!book) notFound();
   const chapters = await chaptersOf(book.id, me?.id);
   const isOwner = me?.id === book.authorId;
-  const style = { ...defaultStyle(book.theme), align: "center" as const };
 
   return (
-    <PoemCanvas style={style} className="min-h-[calc(100vh-3.5rem)]">
-      <div className="mx-auto max-w-2xl px-6 py-16 text-center">
-        <p className="text-xs uppercase tracking-[0.3em]" style={{ color: "var(--poem-muted)" }}>a book by</p>
-        <Link href={`/u/${book.username}`} className="mt-1 inline-block italic hover:underline" style={{ fontFamily: "var(--poem-font)", color: "var(--poem-muted)" }}>
-          {book.author}
-        </Link>
-        <h1 className="mt-6 text-5xl font-semibold leading-tight sm:text-6xl" style={{ fontFamily: "var(--poem-font)" }}>{book.title}</h1>
-        {book.description && (
-          <p className="mx-auto mt-6 max-w-lg whitespace-pre-line text-lg leading-relaxed" style={{ fontFamily: "var(--poem-font)" }}>{book.description}</p>
-        )}
-
-        <div className="mt-8 flex flex-wrap justify-center gap-2">
-          {chapters[0] && (
-            <Link href={`/p/${chapters[0].id}`} className="rounded-full px-6 py-2.5 text-sm font-medium" style={{ background: "var(--poem-accent)", color: "var(--poem-on-accent)" }}>
-              Start reading
-            </Link>
-          )}
-          {isOwner && (
-            <>
-              <Link href={`/write?book=${book.id}`} className="rounded-full px-5 py-2.5 text-sm ring-1 ring-current/30 hover:bg-white/10">+ Add chapter</Link>
-              <Link href={`/b/${book.id}/edit`} className="rounded-full px-5 py-2.5 text-sm ring-1 ring-current/30 hover:bg-white/10">Edit book</Link>
-            </>
-          )}
+    <>
+      <ColumnHeader back title={book.title} subtitle={`${chapters.length} ${chapters.length === 1 ? "chapter" : "chapters"}`} />
+      <section className="flex flex-col items-center gap-5 border-b border-line px-4 py-8 text-center sm:flex-row sm:items-start sm:text-left">
+        <BookCover book={book} className="w-36" />
+        <div className="min-w-0 flex-1">
+          <h1 className="font-display text-4xl font-semibold leading-tight">{book.title}</h1>
+          <Link href={`/u/${book.username}`} className="mt-2 inline-flex items-center gap-2 hover:underline">
+            <Avatar name={book.author} username={book.username} size={24} />
+            <span className="font-bold">{book.author}</span>
+            <span className="text-muted">@{book.username}</span>
+          </Link>
+          {book.description && <p className="mt-3 whitespace-pre-line text-[15px]">{book.description}</p>}
+          <div className="mt-5 flex flex-wrap justify-center gap-2 sm:justify-start">
+            {chapters[0] && (
+              <Link href={`/p/${chapters[0].id}`} className="flex h-9 items-center rounded-full bg-accent px-5 font-bold text-on-accent hover:brightness-110">Start reading</Link>
+            )}
+            {isOwner && (
+              <>
+                <Link href={`/write?book=${book.id}`} className="flex h-9 items-center rounded-full bg-fg px-4 font-bold text-bg hover:opacity-90">+ Add chapter</Link>
+                <Link href={`/b/${book.id}/edit`} className="flex h-9 items-center rounded-full px-4 font-bold ring-1 ring-line hover:bg-hover">Edit book</Link>
+              </>
+            )}
+          </div>
         </div>
+      </section>
 
-        <h2 className="mb-4 mt-16 text-xs uppercase tracking-[0.3em]" style={{ color: "var(--poem-muted)" }}>Contents</h2>
-        {chapters.length ? (
-          <ol className="flex flex-col gap-2 text-left">
-            {chapters.map((c, i) => (
-              <li key={c.id} className="flex items-center gap-3 rounded-2xl p-4 ring-1 ring-current/15">
-                <span className="w-8 shrink-0 text-center text-sm" style={{ color: "var(--poem-muted)" }}>{i + 1}</span>
-                <Link href={`/p/${c.id}`} className="min-w-0 flex-1 hover:underline">
-                  <span className="block text-xl" style={{ fontFamily: "var(--poem-font)" }}>{c.title}</span>
-                  <span className="block truncate text-sm" style={{ color: "var(--poem-muted)" }}>{excerpt(c.doc, 1)[0]}</span>
-                </Link>
-                <span className="shrink-0 text-xs" style={{ color: "var(--poem-muted)" }}>♥ {c.likes}</span>
-                {isOwner && <ChapterMove bookId={book.id} poemId={c.id} first={i === 0} last={i === chapters.length - 1} />}
-              </li>
-            ))}
-          </ol>
-        ) : (
-          <p style={{ color: "var(--poem-muted)" }}>{isOwner ? "No chapters yet. Add your first one." : "No chapters yet."}</p>
-        )}
-      </div>
-    </PoemCanvas>
+      <h2 className="border-b border-line px-4 py-3 text-xl font-extrabold">Contents</h2>
+      {chapters.length ? (
+        <ol>
+          {chapters.map((c, i) => (
+            <li key={c.id} className="flex items-center gap-4 border-b border-line px-4 py-3 hover:bg-hover/40">
+              <span className="w-6 shrink-0 text-center text-muted">{i + 1}</span>
+              <Link href={`/p/${c.id}`} className="min-w-0 flex-1">
+                <span className="block font-bold hover:underline">{c.title}</span>
+                <span className="block truncate text-[15px] text-muted">{excerpt(c.doc, 1)[0]}</span>
+              </Link>
+              <span className="flex shrink-0 items-center gap-1 text-[13px] text-muted"><HeartIcon size={15} /> {c.likes}</span>
+              {isOwner && <ChapterMove bookId={book.id} poemId={c.id} first={i === 0} last={i === chapters.length - 1} />}
+            </li>
+          ))}
+        </ol>
+      ) : (
+        <p className="px-8 py-12 text-center text-muted">{isOwner ? "No chapters yet. Add your first one." : "No chapters yet."}</p>
+      )}
+    </>
   );
 }
 
 export default function BookPage(props: PageProps<"/b/[id]">) {
   return (
-    <>
-      <SiteHeader />
-      <main className="flex-1">
-        <Suspense fallback={<p className="p-12 text-center text-muted">Opening book…</p>}>
-          <BookView params={props.params} />
-        </Suspense>
-      </main>
-    </>
+    <AppShell>
+      <Suspense fallback={<p className="p-8 text-center text-muted">Opening book…</p>}>
+        <BookView params={props.params} />
+      </Suspense>
+    </AppShell>
   );
 }

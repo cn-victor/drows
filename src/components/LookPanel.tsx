@@ -4,7 +4,7 @@ import { defaultStyle, type PoemStyle } from "@/lib/poem";
 import { AMBIENTS, THEMES } from "@/lib/themes";
 
 const label = "text-xs font-semibold uppercase tracking-wider text-muted";
-const chip = "rounded-full px-3 py-1.5 text-sm ring-1 ring-black/10 transition hover:bg-black/5";
+const chip = "rounded-full px-3 py-1.5 text-sm ring-1 ring-line transition hover:bg-hover";
 const chipOn = "bg-ink text-paper ring-ink hover:bg-ink";
 
 /** The side panel where the writer picks the poem's look. */
@@ -21,7 +21,7 @@ export default function LookPanel({ style, onChange }: { style: PoemStyle; onCha
               key={t.id}
               // Choosing a theme also brings its matching font and background motion.
               onClick={() => onChange({ ...defaultStyle(t.id), size: style.size, lineHeight: style.lineHeight, align: style.align })}
-              className={`group relative h-16 overflow-hidden rounded-xl text-left ring-offset-2 transition ${style.theme === t.id ? "ring-2 ring-ink" : "ring-1 ring-black/10 hover:ring-black/30"}`}
+              className={`group relative h-16 overflow-hidden rounded-xl text-left ring-offset-2 transition ${style.theme === t.id ? "ring-2 ring-ink" : "ring-1 ring-line hover:ring-line"}`}
               style={{ background: t.background, color: t.ink }}
             >
               <span className="absolute bottom-1.5 left-2.5 text-[15px] leading-tight" style={{ fontFamily: FONTS.find((f) => f.key === t.font)?.css }}>

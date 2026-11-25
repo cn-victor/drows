@@ -42,6 +42,7 @@ export type Poem = {
   likes: number;
   reposts: number;
   comments: number;
+  gifts: number;
   liked: boolean; // by the person looking at it
   reposted: boolean;
   repostedBy?: { username: string; name: string } | null; // when it shows in a feed because someone reposted it
