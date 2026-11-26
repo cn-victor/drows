@@ -159,7 +159,8 @@ const ADDED_COLUMNS: [table: string, column: string, definition: string][] = [
   ["poems", "book_id", "TEXT"],
   ["poems", "chapter_no", "INTEGER"],
   ["users", "wallet_address", "TEXT"],
-  ["users", "wallet_kind", "TEXT"], // "created" (made here, kept in the writer's browser) or "own" (an address they pasted)
+  ["users", "wallet_kind", "TEXT"],
+  ["poems", "caption", "TEXT NOT NULL DEFAULT ''"], // words shown above the poem in feeds, like a post's text // "created" (made here, kept in the writer's browser) or "own" (an address they pasted)
 ];
 
 async function migrate(c: Client) {

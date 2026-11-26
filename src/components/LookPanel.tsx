@@ -18,7 +18,7 @@ export default function LookPanel({ style, onChange }: { style: PoemStyle; onCha
         <div className="grid grid-cols-2 gap-2">
           {([
             ["page", "Single page", "The whole poem on one screen"],
-            ["slides", "Slides", "Readers swipe through it, like photos"],
+            ["slides", "Picture cards", "4:5 cards readers swipe, like a photo post. Each can be saved as a picture"],
           ] as const).map(([id, name, hint]) => (
             <button
               key={id}

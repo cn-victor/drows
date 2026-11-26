@@ -10,5 +10,11 @@ export function readPoemInput(body: unknown): PoemInput | { error: string } {
   const doc = cleanDoc(b.doc);
   if (!hasWords(doc)) return { error: "Write a few words before publishing." };
   const title = String(b.title ?? "").trim().slice(0, LIMITS.title) || "Untitled";
-  return { title, doc, style: cleanStyle(b.style) };
+  // The caption is plain text (shown as text, never as HTML). At most one empty line in a row.
+  const caption = String(b.caption ?? "")
+    .replace(/\r\n?/g, "\n")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim()
+    .slice(0, LIMITS.caption);
+  return { title, caption, doc, style: cleanStyle(b.style) };
 }

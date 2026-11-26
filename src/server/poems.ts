@@ -21,6 +21,7 @@ function toPoem(r: Row): Poem {
   return {
     id: String(r.id),
     title: String(r.title),
+    caption: String(r.caption ?? ""),
     author: r.display_name ? String(r.display_name) : String(r.author),
     username: r.username ? String(r.username) : null,
     authorId: r.author_id ? String(r.author_id) : null,
@@ -113,15 +114,15 @@ export async function followingFeed(viewer: string, limit = 60): Promise<Poem[]>
   });
 }
 
-export type PoemInput = { title: string; doc: DocNode; style: PoemStyle };
+export type PoemInput = { title: string; caption: string; doc: DocNode; style: PoemStyle };
 
 export async function createPoem(p: PoemInput, author: { id: string; name: string }, bookId: string | null = null): Promise<string> {
   const id = newId();
   const now = Date.now();
   await run(
-    `INSERT INTO poems (id, title, author, doc, style, edit_hash, created_at, updated_at, author_id, book_id, chapter_no)
-     VALUES (?, ?, ?, ?, ?, '', ?, ?, ?, ?, ${bookId ? "(SELECT COALESCE(MAX(chapter_no), 0) + 1 FROM poems WHERE book_id = ?)" : "NULL"})`,
-    [id, p.title, author.name, JSON.stringify(p.doc), JSON.stringify(p.style), now, now, author.id, bookId, ...(bookId ? [bookId] : [])],
+    `INSERT INTO poems (id, title, caption, author, doc, style, edit_hash, created_at, updated_at, author_id, book_id, chapter_no)
+     VALUES (?, ?, ?, ?, ?, ?, '', ?, ?, ?, ?, ${bookId ? "(SELECT COALESCE(MAX(chapter_no), 0) + 1 FROM poems WHERE book_id = ?)" : "NULL"})`,
+    [id, p.title, p.caption, author.name, JSON.stringify(p.doc), JSON.stringify(p.style), now, now, author.id, bookId, ...(bookId ? [bookId] : [])],
   );
   if (bookId) await run("UPDATE books SET updated_at = ? WHERE id = ?", [now, bookId]);
   return id;
@@ -129,8 +130,8 @@ export async function createPoem(p: PoemInput, author: { id: string; name: strin
 
 /** Saves changes. Only works for the poem's own writer. */
 export async function updatePoem(id: string, authorId: string, p: PoemInput): Promise<boolean> {
-  const n = await run("UPDATE poems SET title = ?, doc = ?, style = ?, updated_at = ? WHERE id = ? AND author_id = ?", [
-    p.title, JSON.stringify(p.doc), JSON.stringify(p.style), Date.now(), id, authorId,
+  const n = await run("UPDATE poems SET title = ?, caption = ?, doc = ?, style = ?, updated_at = ? WHERE id = ? AND author_id = ?", [
+    p.title, p.caption, JSON.stringify(p.doc), JSON.stringify(p.style), Date.now(), id, authorId,
   ]);
   return n > 0;
 }

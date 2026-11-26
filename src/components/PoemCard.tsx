@@ -15,12 +15,10 @@ export function PoemPreview({ poem: p, lines = 6 }: { poem: Poem; lines?: number
   const m = p.style.music;
   const slides = p.style.layout === "slides" ? slideBlocks(p.doc, p.style).length : 1;
   const music = m.kind === "scape" ? SOUNDSCAPES.find((s) => s.id === m.id)?.label : m.kind === "upload" ? m.name : null;
-  if (slides > 1) {
+  if (p.style.layout === "slides") {
     // Slides poems swipe sideways right in the feed, like a multi-photo post.
     return (
-      <PoemCanvas style={{ ...p.style, ambient: "none" }} className="overflow-hidden rounded-2xl">
-        <SlidesPreview title={p.title} author={p.author} slides={renderSlides(p.doc, p.style)} align={p.style.align} music={music ?? null} />
-      </PoemCanvas>
+      <SlidesPreview title={p.title} author={p.author} slides={renderSlides(p.doc, p.style)} style={p.style} music={music ?? null} />
     );
   }
   return (
@@ -67,7 +65,8 @@ export default function PoemPost({ poem: p, viewerId }: { poem: Poem; viewerId: 
               <BookIcon size={13} /> {p.bookTitle} · Chapter {p.chapter}
             </Link>
           )}
-          <Link href={href} className="mt-2 block" aria-label={`Read ${p.title}`}>
+          {p.caption && <Caption text={p.caption} href={href} />}
+          <Link href={href} className={`${p.caption ? "mt-3" : "mt-2"} block`} aria-label={`Read ${p.title}`}>
             <PoemPreview poem={p} />
           </Link>
           <div className="mt-3">
@@ -87,6 +86,17 @@ export default function PoemPost({ poem: p, viewerId }: { poem: Poem; viewerId: 
         </div>
       </div>
     </article>
+  );
+}
+
+/** The post's own words above the poem, like the text of a post on X. Long captions fold after 4 lines. */
+function Caption({ text, href }: { text: string; href: string }) {
+  const long = text.length > 280 || text.split(/\n/).length > 4;
+  return (
+    <div className="mt-0.5 text-[15px] leading-5">
+      <p className={`whitespace-pre-line break-words ${long ? "line-clamp-4" : ""}`}>{text}</p>
+      {long && <Link href={href} className="text-accent hover:underline">Show more</Link>}
+    </div>
   );
 }
 

@@ -12,10 +12,11 @@ import PoemCanvas from "./PoemCanvas";
 import PreviewReader from "./PreviewReader";
 import SoundPanel from "./SoundPanel";
 import Toolbar from "./Toolbar";
+import WriterCards from "./WriterCards";
 import { cleanDoc, cleanStyle, defaultStyle, LIMITS, type DocNode, type Poem, type PoemStyle } from "@/lib/poem";
 import { SITE_NAME } from "@/lib/site";
 
-type Draft = { title: string; doc: DocNode; style: PoemStyle };
+type Draft = { title: string; caption?: string; doc: DocNode; style: PoemStyle };
 
 type Props = {
   initial: Poem | null; // the poem being edited (null for a new one)
@@ -29,6 +30,7 @@ export default function Writer({ initial, authorName, book }: Props) {
   // New chapters keep their own draft, separate from a new standalone poem.
   const DRAFT = book ? `drows:draft:book:${book.id}` : "drows:draft";
   const [title, setTitle] = useState(initial?.title ?? "");
+  const [caption, setCaption] = useState(initial?.caption ?? "");
   const [style, setStyle] = useState<PoemStyle>(initial?.style ?? defaultStyle());
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -53,6 +55,7 @@ export default function Writer({ initial, authorName, book }: Props) {
           if (d) {
             e.commands.setContent(d.doc);
             setTitle(d.title);
+            setCaption(d.caption ?? "");
             setStyle(cleanStyle(d.style)); // older drafts may miss newer settings
           }
         } catch {}
@@ -66,14 +69,14 @@ export default function Writer({ initial, authorName, book }: Props) {
     if (!editor || editing) return;
     const save = () => {
       if (!loaded.current) return;
-      localStorage.setItem(DRAFT, JSON.stringify({ title, doc: editor.getJSON() as DocNode, style } satisfies Draft));
+      localStorage.setItem(DRAFT, JSON.stringify({ title, caption, doc: editor.getJSON() as DocNode, style } satisfies Draft));
     };
     save();
     editor.on("update", save);
     return () => {
       editor.off("update", save);
     };
-  }, [editor, editing, title, style, DRAFT]);
+  }, [editor, editing, title, caption, style, DRAFT]);
 
   async function publish() {
     if (!editor) return;
@@ -83,7 +86,7 @@ export default function Writer({ initial, authorName, book }: Props) {
       const res = await fetch(editing ? `/api/poems/${editing}` : "/api/poems", {
         method: editing ? "PUT" : "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title, doc: editor.getJSON(), style, bookId: book?.id }),
+        body: JSON.stringify({ title, caption, doc: editor.getJSON(), style, bookId: book?.id }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Something went wrong. Please try again.");
@@ -109,6 +112,7 @@ export default function Writer({ initial, authorName, book }: Props) {
     if (!editor || !confirm("Clear this draft and start a new poem?")) return;
     editor.commands.clearContent(true);
     setTitle("");
+    setCaption("");
     localStorage.removeItem(DRAFT);
   }
 
@@ -156,6 +160,19 @@ export default function Writer({ initial, authorName, book }: Props) {
                 <LineBar editor={editor} />
               </div>
             )}
+            <label className="mb-8 block rounded-2xl bg-black/10 px-4 py-3 ring-1 ring-black/10" style={{ fontFamily: "var(--font-modern)" }}>
+              <span className="flex justify-between text-xs font-bold" style={{ color: "var(--poem-muted)" }}>
+                Caption <span className="font-normal">{caption.length > LIMITS.caption - 80 ? `${LIMITS.caption - caption.length} left` : "Shown above your poem, like the words of a post"}</span>
+              </span>
+              <textarea
+                value={caption}
+                onChange={(e) => setCaption(e.target.value)}
+                maxLength={LIMITS.caption}
+                rows={2}
+                placeholder="Say something about this poem…"
+                className="mt-1 w-full resize-y bg-transparent text-[15px] leading-6 outline-none placeholder:text-[var(--poem-muted)] placeholder:opacity-70"
+              />
+            </label>
             <input
               value={title}
               onChange={(e) => setTitle(e.target.value)}
@@ -169,6 +186,7 @@ export default function Writer({ initial, authorName, book }: Props) {
               by {authorName}
             </p>
             <EditorContent editor={editor} className="poem-body mt-8" />
+            {editor && style.layout === "slides" && <WriterCards editor={editor} style={style} title={title} author={authorName} />}
           </div>
         </PoemCanvas>
 

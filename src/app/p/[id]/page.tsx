@@ -106,26 +106,35 @@ async function PoemView({ params, searchParams }: { params: PageProps<"/p/[id]">
           )}
         </div>
 
+        {/* The writer's caption, like the text of a post */}
+        {poem.caption && <p className="mt-3 whitespace-pre-line break-words text-[17px] leading-6">{poem.caption}</p>}
+
         {/* The poem, on its own theme, with music and the reader */}
-        <PoemCanvas style={style} className="mt-3 overflow-hidden rounded-2xl border border-line">
-          <div className="px-6 pb-10 pt-8 sm:px-10">
-            <h1 className="text-3xl font-semibold leading-tight sm:text-4xl" style={{ fontFamily: "var(--poem-font)", textAlign: style.align }}>
-              {poem.title}
-            </h1>
-            <p className="mt-1 text-lg italic" style={{ color: "var(--poem-muted)", fontFamily: "var(--poem-font)", textAlign: style.align }}>
-              by {poem.author}
-            </p>
-            <div className="mt-5">
-              <PoemPlayer poemId={poem.id} segments={buildSegments(poem.doc)} music={style.music} align={style.align} />
-            </div>
-            {/* The poem was cleaned when it was saved and loaded, so only safe formatting reaches the page. */}
-            {slides.length > 1 ? (
-              <SlidesDetail slides={slides} />
-            ) : (
-              <div data-poem className="poem-body mt-8" dangerouslySetInnerHTML={{ __html: renderDoc(poem.doc) }} />
-            )}
+        {style.layout === "slides" ? (
+          // Slides poems are picture cards (4:5) that can be saved as pictures.
+          <div className="mt-3">
+            <SlidesDetail slides={slides} style={style} title={poem.title} author={poem.author} />
+            <PoemCanvas style={style} className="mt-3 rounded-2xl border border-line px-4 py-3">
+              <PoemPlayer poemId={poem.id} segments={buildSegments(poem.doc)} music={style.music} align="left" />
+            </PoemCanvas>
           </div>
-        </PoemCanvas>
+        ) : (
+          <PoemCanvas style={style} className="mt-3 overflow-hidden rounded-2xl border border-line">
+            <div className="px-6 pb-10 pt-8 sm:px-10">
+              <h1 className="text-3xl font-semibold leading-tight sm:text-4xl" style={{ fontFamily: "var(--poem-font)", textAlign: style.align }}>
+                {poem.title}
+              </h1>
+              <p className="mt-1 text-lg italic" style={{ color: "var(--poem-muted)", fontFamily: "var(--poem-font)", textAlign: style.align }}>
+                by {poem.author}
+              </p>
+              <div className="mt-5">
+                <PoemPlayer poemId={poem.id} segments={buildSegments(poem.doc)} music={style.music} align={style.align} />
+              </div>
+              {/* The poem was cleaned when it was saved and loaded, so only safe formatting reaches the page. */}
+              <div data-poem className="poem-body mt-8" dangerouslySetInnerHTML={{ __html: renderDoc(poem.doc) }} />
+            </div>
+          </PoemCanvas>
+        )}
 
         <p className="mt-4 text-[15px] text-muted"><TimeAgo at={poem.createdAt} long /></p>
         {stats.length > 0 && (

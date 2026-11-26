@@ -38,6 +38,7 @@ export type Poem = {
   // books
   bookId: string | null;
   bookTitle: string | null;
+  caption: string; // shown above the poem in feeds, like the text of a post
   chapter: number | null;
   // social
   likes: number;
@@ -70,7 +71,7 @@ export function defaultStyle(themeId = "parchment"): PoemStyle {
   };
 }
 
-export const LIMITS = { title: 120, author: 60, docBytes: 200_000 };
+export const LIMITS = { title: 120, author: 60, caption: 500, docBytes: 200_000 };
 
 const BLOCKS = new Set(["paragraph", "heading", "blockquote", "horizontalRule", "slideBreak"]);
 const INLINE = new Set(["text", "hardBreak"]);
