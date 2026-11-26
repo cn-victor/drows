@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Caveat, Cormorant_Garamond, Dancing_Script, EB_Garamond, Inter, Lora, Playfair_Display, Special_Elite } from "next/font/google";
+import { Caveat, Cormorant_Garamond, Dancing_Script, EB_Garamond, Inter, Lora, Marck_Script, Playfair_Display, Special_Elite } from "next/font/google";
 import { SITE_NAME, SITE_TAGLINE } from "@/lib/site";
 import "./globals.css";
 
@@ -11,6 +11,7 @@ const script = Dancing_Script({ variable: "--font-script", subsets: ["latin"] })
 const hand = Caveat({ variable: "--font-hand", subsets: ["latin"] });
 const typewriter = Special_Elite({ variable: "--font-typewriter", subsets: ["latin"], weight: "400" });
 const modern = Inter({ variable: "--font-modern", subsets: ["latin"] });
+const signature = Marck_Script({ variable: "--font-signature", subsets: ["latin"], weight: "400" }); // the writer's name on slides cards
 
 export const metadata: Metadata = {
   title: { default: SITE_NAME, template: `%s · ${SITE_NAME}` },
@@ -23,7 +24,7 @@ export const viewport: Viewport = { themeColor: "#000000" };
 const themeScript = `try{var t=localStorage.getItem("drows:theme");if(t==="light"||t==="dark")document.documentElement.dataset.theme=t}catch(e){}`;
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
-  const fonts = [garamond, cormorant, lora, playfair, script, hand, typewriter, modern].map((f) => f.variable).join(" ");
+  const fonts = [garamond, cormorant, lora, playfair, script, hand, typewriter, modern, signature].map((f) => f.variable).join(" ");
   return (
     <html lang="en" data-theme="dark" className={`${fonts} h-full antialiased`} suppressHydrationWarning>
       <head>

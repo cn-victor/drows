@@ -151,6 +151,12 @@ const BOOKMARKICON_D = ["M14.25 16.625L9.5 13.6562L4.75 16.625V3.5625C4.75 3.405
 export const BookmarkIcon = (p: P) => <Design {...p} box={19} paths={BOOKMARKICON_D} />;
 const SHAREFATICON_D = ["M2.29559 14.7488C3.51723 13.4477 6.72422 10.6875 11.2813 10.6875V14.25L17.2188 8.3125L11.2813 2.375V5.9375C7.3625 5.9375 2.33863 9.68184 1.78125 14.5127C1.77353 14.5753 1.78593 14.6387 1.81664 14.6937C1.84735 14.7488 1.89479 14.7926 1.95208 14.8189C2.00937 14.8452 2.07354 14.8526 2.13529 14.8399C2.19705 14.8273 2.25319 14.7954 2.29559 14.7488Z"];
 export const ShareFatIcon = (p: P) => <Design {...p} box={19} paths={SHAREFATICON_D} />;
+/** Small sound-wave mark next to a poem's sound name (from the Figma design). */
+export const WaveformIcon = ({ size = 10, className }: { size?: number; className?: string }) => (
+  <svg width={size} height={size} viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" aria-hidden className={className}>
+    <path d="M0.875 3.75V6.25M2.875 1.25V8.75M4.875 2.5V7.5M6.875 3.75V6.25M8.875 3.125V6.875" />
+  </svg>
+);
 
 /** The Drows mark: a quill inside a circle. */
 export const DrowsMark = ({ size = 30 }: { size?: number }) => (
