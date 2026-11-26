@@ -8,6 +8,7 @@ import FollowButton from "@/components/FollowButton";
 import { BookIcon } from "@/components/icons";
 import PoemActions from "@/components/PoemActions";
 import PoemCanvas from "@/components/PoemCanvas";
+import PhonePoemView from "@/components/PhonePoemView";
 import PoemPlayer from "@/components/PoemPlayer";
 import SlidesDetail from "@/components/SlidesDetail";
 import AppShell from "@/components/shell/AppShell";
@@ -83,8 +84,60 @@ async function PoemView({ params, searchParams }: { params: PageProps<"/p/[id]">
     [poem.gifts, poem.gifts === 1 ? "Gift" : "Gifts"],
   ].filter(([n]) => Number(n) > 0) as [number, string][];
 
+  const commentsList = (
+    <Comments
+      poemId={poem.id}
+      comments={comments}
+      viewer={me ? { id: me.id, username: me.username, name: me.name } : null}
+      isPoemOwner={isOwner}
+      replyingTo={poem.username}
+    />
+  );
+  const giftButton = (vertical: boolean) =>
+    poem.authorId ? (
+      <GiftButton
+        poemId={poem.id}
+        writerName={poem.author}
+        writerHasWallet={!!writer?.wallet_address}
+        isOwner={isOwner}
+        viewer={me ? { id: me.id, walletAddress: me.walletAddress } : null}
+        giftCount={poem.gifts}
+        autoOpen={sp.gift === "1"}
+        vertical={vertical}
+      />
+    ) : undefined;
+
   return (
     <>
+      {/* Phones: full screen, like a photo post on TikTok */}
+      <PhonePoemView
+        poem={{
+          id: poem.id,
+          title: poem.title,
+          author: poem.author,
+          username: poem.username,
+          caption: poem.caption,
+          createdAt: poem.createdAt,
+          style,
+          likes: poem.likes,
+          reposts: poem.reposts,
+          gifts: poem.gifts,
+          liked: poem.liked,
+          reposted: poem.reposted,
+          saved: !!poem.saved,
+        }}
+        slides={style.layout === "slides" ? slides : null}
+        pageHtml={style.layout === "slides" ? "" : renderDoc(poem.doc)}
+        segments={buildSegments(poem.doc)}
+        commentCount={comments.length}
+        isOwner={isOwner}
+        loggedIn={!!me}
+        gift={giftButton(true)}
+        comments={commentsList}
+      />
+
+      {/* Computers and tablets: the X-style poem page */}
+      <div className="hidden sm:block">
       <ColumnHeader back title={poem.bookId ? "Chapter" : "Poem"} />
       {sp.new === "1" && isOwner && (
         <p className="border-b border-line bg-accent/15 px-4 py-3 text-[15px]">Your poem is live. Share it with the ↑ button below.</p>
@@ -115,7 +168,7 @@ async function PoemView({ params, searchParams }: { params: PageProps<"/p/[id]">
           <div className="mt-3">
             <SlidesDetail slides={slides} style={style} title={poem.title} author={poem.author} />
             <PoemCanvas style={style} className="mt-3 rounded-2xl border border-line px-4 py-3">
-              <PoemPlayer poemId={poem.id} segments={buildSegments(poem.doc)} music={style.music} align="left" />
+              <PoemPlayer poemId={poem.id} segments={buildSegments(poem.doc)} music={style.music} align="left" autoMusic />
             </PoemCanvas>
           </div>
         ) : (
@@ -128,7 +181,7 @@ async function PoemView({ params, searchParams }: { params: PageProps<"/p/[id]">
                 by {poem.author}
               </p>
               <div className="mt-5">
-                <PoemPlayer poemId={poem.id} segments={buildSegments(poem.doc)} music={style.music} align={style.align} />
+                <PoemPlayer poemId={poem.id} segments={buildSegments(poem.doc)} music={style.music} align={style.align} autoMusic />
               </div>
               {/* The poem was cleaned when it was saved and loaded, so only safe formatting reaches the page. */}
               <div data-poem className="poem-body mt-8" dangerouslySetInnerHTML={{ __html: renderDoc(poem.doc) }} />
@@ -157,30 +210,13 @@ async function PoemView({ params, searchParams }: { params: PageProps<"/p/[id]">
             saved={poem.saved}
             isOwner={isOwner}
             loggedIn={!!me}
-            giftSlot={
-              poem.authorId ? (
-                <GiftButton
-                  poemId={poem.id}
-                  writerName={poem.author}
-                  writerHasWallet={!!writer?.wallet_address}
-                  isOwner={isOwner}
-                  viewer={me ? { id: me.id, walletAddress: me.walletAddress } : null}
-                  giftCount={poem.gifts}
-                  autoOpen={sp.gift === "1"}
-                />
-              ) : undefined
-            }
+            giftSlot={giftButton(false)}
           />
         </div>
       </article>
 
-      <Comments
-        poemId={poem.id}
-        comments={comments}
-        viewer={me ? { id: me.id, username: me.username, name: me.name } : null}
-        isPoemOwner={isOwner}
-        replyingTo={poem.username}
-      />
+      {commentsList}
+      </div>
     </>
   );
 }

@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { beginGift, finishGift } from "@/app/actions";
 import { explorerTx, formatAmount, GIFT_MIN, GIFT_PRESETS, IS_TEST_MONEY, PLATFORM_FEE_PERCENT, splitGift, toUnits, type Currency } from "@/lib/chain";
 import { explainChainError, getBalances, payGift } from "@/lib/solanaClient";
@@ -18,17 +18,27 @@ type Props = {
   giftCount: number;
   /** Open the gift window straight away (used when someone taps 🎁 in a feed). */
   autoOpen?: boolean;
+  /** Big white button for the full-screen phone view. */
+  vertical?: boolean;
 };
 
 /** 🎁 on a poem: readers send the writer money (85% to the writer, 15% to the platform). */
 export default function GiftButton(p: Props) {
   const router = useRouter();
-  const [open, setOpen] = useState(!!p.autoOpen && !!p.viewer && !p.isOwner);
-  const cls = "group flex items-center gap-1 text-muted transition hover:text-amber-400";
+  const [open, setOpen] = useState(false);
+  const btn = useRef<HTMLButtonElement>(null);
+  // The page has a phone copy and a computer copy of this button; only the one on screen opens itself.
+  useEffect(() => {
+    if (p.autoOpen && p.viewer && !p.isOwner && btn.current?.offsetParent) setOpen(true);
+  }, [p.autoOpen, p.viewer, p.isOwner]);
+  const cls = p.vertical
+    ? "group flex flex-col items-center gap-1 text-white drop-shadow-[0_1px_3px_rgba(0,0,0,0.7)] transition hover:text-amber-400"
+    : "group flex items-center gap-1 text-muted transition hover:text-amber-400";
 
   return (
     <>
       <button
+        ref={btn}
         className={cls}
         title={p.isOwner ? "Gifts you received for this poem" : "Send the writer a gift"}
         aria-label="Send a gift"
@@ -38,8 +48,8 @@ export default function GiftButton(p: Props) {
           setOpen(true);
         }}
       >
-        <span className="-m-2 rounded-full p-2 transition group-hover:bg-amber-400/15"><GiftIcon size={22} /></span>
-        <span className="min-w-[1ch] text-sm">{p.giftCount > 0 ? p.giftCount : ""}</span>
+        <span className="-m-2 rounded-full p-2 transition group-hover:bg-amber-400/15"><GiftIcon size={p.vertical ? 30 : 22} /></span>
+        <span className={`min-w-[1ch] ${p.vertical ? "text-xs font-semibold" : "text-sm"}`}>{p.giftCount > 0 ? p.giftCount : ""}</span>
       </button>
       {open && p.viewer && <GiftDialog {...p} viewer={p.viewer} onClose={() => setOpen(false)} />}
     </>
