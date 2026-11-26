@@ -8,7 +8,7 @@ import FollowButton from "@/components/FollowButton";
 import { BookIcon } from "@/components/icons";
 import PoemActions from "@/components/PoemActions";
 import PoemCanvas from "@/components/PoemCanvas";
-import PhonePoemView from "@/components/PhonePoemView";
+import ReelsView from "@/components/reels/ReelsView";
 import PoemPlayer from "@/components/PoemPlayer";
 import SlidesDetail from "@/components/SlidesDetail";
 import AppShell from "@/components/shell/AppShell";
@@ -20,7 +20,8 @@ import { buildSegments } from "@/lib/segments";
 import { SITE_NAME } from "@/lib/site";
 import { currentUser } from "@/server/auth";
 import { one } from "@/server/db";
-import { chaptersOf, getPoem } from "@/server/poems";
+import { chaptersOf, getPoem, latestPoems } from "@/server/poems";
+import { toReel } from "@/server/reels";
 import { commentsOn } from "@/server/social";
 
 export async function generateMetadata(props: PageProps<"/p/[id]">): Promise<Metadata> {
@@ -74,6 +75,11 @@ async function PoemView({ params, searchParams }: { params: PageProps<"/p/[id]">
   const { style } = poem;
   const isOwner = !!me && me.id === poem.authorId;
   const slides = renderSlides(poem.doc, style); // one item for a single-page poem
+  // Phones open this poem inside everyone's newest poems (Reels), so you can swipe up and down.
+  const feed = await latestPoems(me?.id, 30);
+  const at = feed.findIndex((p) => p.id === poem.id);
+  const reels = at >= 0 ? feed : [poem, ...feed];
+  const startIndex = Math.max(0, at);
   const [comments, writer] = await Promise.all([
     commentsOn(poem.id),
     poem.authorId ? one("SELECT wallet_address FROM users WHERE id = ?", [poem.authorId]) : null,
@@ -109,32 +115,8 @@ async function PoemView({ params, searchParams }: { params: PageProps<"/p/[id]">
 
   return (
     <>
-      {/* Phones: full screen, like a photo post on TikTok */}
-      <PhonePoemView
-        poem={{
-          id: poem.id,
-          title: poem.title,
-          author: poem.author,
-          username: poem.username,
-          caption: poem.caption,
-          createdAt: poem.createdAt,
-          style,
-          likes: poem.likes,
-          reposts: poem.reposts,
-          gifts: poem.gifts,
-          liked: poem.liked,
-          reposted: poem.reposted,
-          saved: !!poem.saved,
-        }}
-        slides={style.layout === "slides" ? slides : null}
-        pageHtml={style.layout === "slides" ? "" : renderDoc(poem.doc)}
-        segments={buildSegments(poem.doc)}
-        commentCount={comments.length}
-        isOwner={isOwner}
-        loggedIn={!!me}
-        gift={giftButton(true)}
-        comments={commentsList}
-      />
+      {/* Phones: the Reels screen (full screen, swipe up for more poems) */}
+      <ReelsView initial={reels.map(toReel)} startIndex={startIndex} viewer={me ? { id: me.id, username: me.username, name: me.name, walletAddress: me.walletAddress } : null} />
 
       {/* Computers and tablets: the X-style poem page */}
       <div className="hidden sm:block">

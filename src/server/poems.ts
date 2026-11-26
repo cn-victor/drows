@@ -166,3 +166,41 @@ export async function savedBy(userId: string): Promise<Poem[]> {
   const poems = await poemsByIds(rows.map((r) => String(r.poem_id)), userId);
   return rows.flatMap((r) => poems.get(String(r.poem_id)) ?? []);
 }
+
+/** Poems for the Reels screen, newest first, older than `before`.
+ *  "friends" = only people the viewer follows. `exclude` skips the poem already showing. */
+export async function reelPoems(viewer: string | null, tab: "reels" | "friends", before: number, exclude: string, limit = 8): Promise<Poem[]> {
+  if (tab === "friends" && !viewer) return [];
+  const friends = tab === "friends" ? "AND p.author_id IN (SELECT followee_id FROM follows WHERE follower_id = :viewer)" : "";
+  return (
+    await all(`${SELECT} WHERE p.created_at < :before AND p.id != :exclude ${friends} ORDER BY p.created_at DESC LIMIT :limit`, {
+      viewer: v(viewer),
+      before,
+      exclude,
+      limit,
+    })
+  ).map(toPoem);
+}
+
+/** The Writers tab: people who have written poems (most poems first), each with their newest poem. */
+export async function writersWithLatest(viewer: string | null, limit = 20) {
+  const rows = await all(
+    `SELECT u.id, u.username, u.display_name, u.bio,
+       EXISTS (SELECT 1 FROM follows WHERE follower_id = :viewer AND followee_id = u.id) AS following,
+       (SELECT id FROM poems WHERE author_id = u.id ORDER BY created_at DESC LIMIT 1) AS latest,
+       (SELECT COUNT(*) FROM poems WHERE author_id = u.id) AS n
+     FROM users u WHERE EXISTS (SELECT 1 FROM poems WHERE author_id = u.id)
+     ORDER BY n DESC, u.created_at DESC LIMIT :limit`,
+    { viewer: v(viewer), limit },
+  );
+  const latest = await poemsByIds(rows.map((r) => String(r.latest)), v(viewer));
+  return rows.map((r) => ({
+    id: String(r.id),
+    username: String(r.username),
+    name: String(r.display_name),
+    bio: String(r.bio ?? ""),
+    following: !!Number(r.following),
+    poems: Number(r.n),
+    latest: latest.get(String(r.latest)) ?? null,
+  }));
+}

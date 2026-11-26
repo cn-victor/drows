@@ -12,7 +12,8 @@ import { unreadNotifications } from "@/server/notify";
 import { suggestedWriters } from "@/server/social";
 
 /** Every page's frame: menu on the left, the page in the middle, extras on the right. */
-export default function AppShell({ children, wide = false }: { children: ReactNode; wide?: boolean }) {
+/** `ownTop`: the page draws the phone top bar itself (inside its own header, like Home). */
+export default function AppShell({ children, wide = false, ownTop = false }: { children: ReactNode; wide?: boolean; ownTop?: boolean }) {
   return (
     <div className="mx-auto flex w-full max-w-[1280px] justify-center">
       <header className="hidden shrink-0 sm:flex sm:justify-end">
@@ -21,9 +22,7 @@ export default function AppShell({ children, wide = false }: { children: ReactNo
         </Suspense>
       </header>
       <main className={`min-h-screen w-full min-w-0 border-line pb-28 sm:border-x sm:pb-0 ${wide ? "max-w-[920px]" : "max-w-[600px]"}`}>
-        <Suspense fallback={<div className="h-12 sm:hidden" />}>
-          <Top />
-        </Suspense>
+        {!ownTop && <MobileTopBar />}
         {children}
       </main>
       {!wide && (
@@ -56,6 +55,15 @@ async function Side() {
 }
 async function Top() {
   return <MobileTop me={await meLite()} />;
+}
+
+/** Phones: your picture, the Drows mark and the bell. */
+export function MobileTopBar() {
+  return (
+    <Suspense fallback={<div className="h-14 sm:hidden" />}>
+      <Top />
+    </Suspense>
+  );
 }
 async function Bottom() {
   return <BottomNav me={await meLite()} />;

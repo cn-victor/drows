@@ -17,11 +17,13 @@ type Props = {
   cardRef?: Ref<HTMLDivElement>;
   /** Told whether the words fit on the card (used by the writer to warn). */
   onFit?: (fits: boolean) => void;
+  /** No background of its own: the words sit straight on a full-screen poem page (Reels). */
+  bare?: boolean;
 };
 
 /** One poem card, shaped like a 4:5 photo. Everything inside is sized from the card's own width,
  *  so the same words fit the same way on a phone, a computer, and in the saved picture. */
-export default function SlideCard({ html, style, author, title, cardRef, onFit }: Props) {
+export default function SlideCard({ html, style, author, title, cardRef, onFit, bare = false }: Props) {
   const body = useRef<HTMLDivElement>(null);
   const cover = !!title && isEmptySlide(html);
   const k = SIZE_SCALE[style.size] ?? 1;
@@ -43,7 +45,7 @@ export default function SlideCard({ html, style, author, title, cardRef, onFit }
 
   return (
     <div ref={cardRef} className="w-full" style={{ containerType: "inline-size" }}>
-      <PoemCanvas style={{ ...style, ambient: "none" }} className="aspect-[4/5] w-full">
+      <Frame bare={bare} style={style}>
         <div
           ref={body}
           className={`flex h-full flex-col justify-center overflow-hidden ${cover ? "items-center text-center" : ""}`}
@@ -73,7 +75,16 @@ export default function SlideCard({ html, style, author, title, cardRef, onFit }
           {author}
         </span>
         {!fits && onFit && <span className="pointer-events-none absolute inset-x-0 bottom-0 h-1 bg-red-500" aria-hidden />}
-      </PoemCanvas>
+      </Frame>
     </div>
+  );
+}
+
+function Frame({ bare, style, children }: { bare: boolean; style: PoemStyle; children: React.ReactNode }) {
+  if (bare) return <div className="relative aspect-[4/5] w-full">{children}</div>;
+  return (
+    <PoemCanvas style={{ ...style, ambient: "none" }} className="aspect-[4/5] w-full">
+      {children}
+    </PoemCanvas>
   );
 }

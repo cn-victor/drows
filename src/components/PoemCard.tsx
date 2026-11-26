@@ -4,6 +4,7 @@ import Avatar from "./Avatar";
 import { BookIcon, RepostIcon } from "./icons";
 import PoemActions from "./PoemActions";
 import PoemCanvas from "./PoemCanvas";
+import AutoSound from "./AutoSound";
 import SlidesPreview from "./SlidesPreview";
 import TimeAgo from "./TimeAgo";
 import { excerpt, renderSlides, slideBlocks, type Poem } from "@/lib/poem";
@@ -30,9 +31,10 @@ export function PoemPreview({ poem: p, lines = 6 }: { poem: Poem; lines?: number
             <p key={i} className="overflow-hidden text-ellipsis whitespace-pre">{line}</p>
           ))}
         </div>
-        <p className="mt-3 text-xs font-medium" style={{ color: "var(--poem-muted)", fontFamily: "var(--font-modern)" }}>
-          {slides > 1 ? `⧉ ${slides} slides` : "Read"}{music ? ` · ♫ ${music}` : ""} · ▶ Listen
-        </p>
+        <div className="mt-3 flex items-center gap-2 text-xs font-medium" style={{ color: "var(--poem-muted)", fontFamily: "var(--font-modern)", justifyContent: p.style.align === "center" ? "center" : p.style.align === "right" ? "flex-end" : "flex-start" }}>
+          <span className="shrink-0">{slides > 1 ? `⧉ ${slides} slides` : "Read"} · ▶ Listen</span>
+          {music && <AutoSound music={m} label={music} className="-my-1 px-2 py-1 hover:bg-black/10" />}
+        </div>
       </div>
     </PoemCanvas>
   );

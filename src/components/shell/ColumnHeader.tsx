@@ -36,10 +36,15 @@ export function Tabs({ tabs, active }: { tabs: { id: string; label: string; href
   return (
     <nav className="flex overflow-x-auto no-scrollbar">
       {tabs.map((t) => (
-        <Link key={t.id} href={t.href} className="flex min-w-[80px] flex-1 justify-center px-4 hover:bg-hover">
-          <span className={`relative py-4 text-[15px] ${active === t.id ? "font-bold" : "text-muted"}`}>
+        <Link
+          key={t.id}
+          href={t.href}
+          aria-current={active === t.id ? "page" : undefined}
+          className="flex h-[53px] min-w-[80px] flex-1 justify-center px-4 transition hover:bg-hover"
+        >
+          <span className={`relative flex items-center text-[15px] ${active === t.id ? "font-bold text-fg" : "font-medium text-muted"}`}>
             {t.label}
-            {active === t.id && <span className="absolute inset-x-0 bottom-0 h-1 rounded-full bg-accent" />}
+            {active === t.id && <span className="absolute bottom-0 left-1/2 h-1 w-full min-w-14 -translate-x-1/2 rounded-full bg-accent" />}
           </span>
         </Link>
       ))}

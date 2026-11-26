@@ -12,10 +12,12 @@ type Props = {
   viewer: { id: string; username: string; name: string } | null;
   isPoemOwner: boolean;
   replyingTo: string | null;
+  /** Called after a reply is posted (the Reels screen reloads its list). */
+  onPosted?: () => void;
 };
 
 /** Replies under a poem, and the box to write one. */
-export default function Comments({ poemId, comments, viewer, isPoemOwner, replyingTo }: Props) {
+export default function Comments({ poemId, comments, viewer, isPoemOwner, replyingTo, onPosted }: Props) {
   const [state, action, pending] = useActionState<FormState, FormData>(postComment.bind(null, poemId), null);
   const form = useRef<HTMLFormElement>(null);
   const [text, setText] = useState("");
@@ -24,7 +26,9 @@ export default function Comments({ poemId, comments, viewer, isPoemOwner, replyi
       form.current?.reset();
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setText("");
+      onPosted?.();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state]);
 
   return (
@@ -74,7 +78,7 @@ export default function Comments({ poemId, comments, viewer, isPoemOwner, replyi
               </p>
               <p className="mt-0.5 whitespace-pre-line break-words text-[15px]">{c.body}</p>
               {(viewer?.id === c.userId || isPoemOwner) && (
-                <button onClick={() => confirm("Delete this reply?") && removeComment(c.id)} className="mt-1 text-[13px] text-muted hover:text-red-500">
+                <button onClick={async () => { if (confirm("Delete this reply?")) { await removeComment(c.id); onPosted?.(); } }} className="mt-1 text-[13px] text-muted hover:text-red-500">
                   Delete
                 </button>
               )}

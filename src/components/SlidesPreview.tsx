@@ -1,6 +1,6 @@
 "use client";
 import { useRef, useState } from "react";
-import { WaveformIcon } from "./icons";
+import AutoSound from "./AutoSound";
 import SlideCard from "./SlideCard";
 import type { PoemStyle } from "@/lib/poem";
 import { getTheme } from "@/lib/themes";
@@ -41,10 +41,7 @@ export default function SlidesPreview({ title, author, slides, style, music }: P
 
         <div className="pointer-events-none absolute inset-x-4 top-4 flex items-center justify-between">
           {music ? (
-            <span className="flex min-w-0 items-center gap-[3px] text-[13px]" style={{ color: muted, fontFamily: "var(--font-modern)" }}>
-              <WaveformIcon size={10} className="shrink-0" />
-              <span className="truncate">{music}</span>
-            </span>
+            <AutoSound music={style.music} label={music} color={muted} className="pointer-events-auto -m-1.5 p-1.5" />
           ) : (
             <span />
           )}
